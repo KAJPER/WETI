@@ -1,0 +1,1731 @@
+\documentclass[a4paper,11pt]{article}
+
+% ── Kodowanie i język ──
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[polish]{babel}
+
+% ── Marginesy ──
+\usepackage[margin=2.5cm]{geometry}
+
+% ── Matematyka ──
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{siunitx}
+\sisetup{
+    output-decimal-marker = {,},
+    per-mode = symbol,
+    range-phrase = { -- },
+}
+
+% ── Grafika i tabele ──
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{caption}
+\usepackage{subcaption}
+
+% ── Kolory i linki ──
+\usepackage[dvipsnames]{xcolor}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=NavyBlue,
+    citecolor=NavyBlue,
+    urlcolor=RoyalBlue,
+}
+
+% ── Listingi kodu ──
+\usepackage{listings}
+\lstset{
+    language=C,
+    basicstyle=\ttfamily\footnotesize,
+    keywordstyle=\color{NavyBlue}\bfseries,
+    commentstyle=\color{Gray}\itshape,
+    stringstyle=\color{OliveGreen},
+    numbers=left,
+    numberstyle=\tiny\color{Gray},
+    frame=single,
+    breaklines=true,
+    captionpos=b,
+    tabsize=4,
+    showstringspaces=false,
+}
+
+% ── Flowcharty / diagramy ──
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, calc, patterns, decorations.markings}
+
+% ── Nagłówek / stopka ──
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small Bezkontaktowy miernik odległości — Pulse-Phase Ranging}
+\fancyhead[R]{\small Wygraj Indeks WETI 2026}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% ── Odstępy ──
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{parskip}
+
+% ── Enumerate customization ──
+\usepackage{enumitem}
+
+% ══════════════════════════════════════════════════════════════
+\begin{document}
+
+% ── STRONA TYTUŁOWA ──────────────────────────────────────────
+\begin{titlepage}
+    \centering
+    \vspace*{1.5cm}
+
+    {\Large Ogólnopolski Konkurs Projektowy}\\[0.3cm]
+    {\Large\textbf{,,Wygraj Indeks WETI'' --- edycja 2026}}\\[0.2cm]
+    {\large Wydział Elektroniki, Telekomunikacji i~Informatyki\\
+    Politechnika Gdańska}
+
+    \vspace{1.5cm}
+
+    {\Huge\bfseries Bezkontaktowy miernik odległości}\\[0.5cm]
+    {\Large Metoda hybrydowa Pulse-Phase Ranging\\z~kompensacją temperatury}
+
+    \vspace{1.5cm}
+
+    % ── Schemat blokowy na stronie tytułowej ──
+    \begin{tikzpicture}[
+        block/.style={rectangle, draw, fill=NavyBlue!10, minimum width=2.2cm, minimum height=1cm, align=center, font=\small},
+        arr/.style={->, >=Stealth, thick},
+        scale=0.9, transform shape
+    ]
+        \node[block] (psu) {Zasilanie\\5V$\to$3{,}3V};
+        \node[block, right=1.5cm of psu] (tx) {Nadajnik\\TX 40\,kHz\\{\scriptsize (BC817)}};
+        \node[block, right=1.5cm of tx] (rx) {Odbiornik\\RX + MCP6002};
+        \node[block, right=1.5cm of rx] (mcu) {ATtiny1616\\MCU + AC0};
+        \node[block, below=1.0cm of tx] (temp) {Termistor\\NTC};
+
+        % Zasilanie -> Nadajnik
+        \draw[arr] (psu) -- (tx);
+        % Zasilanie -> MCU (górą)
+        \draw[arr] (psu.north) -- ++(0,0.5) -| (mcu.north);
+        % MCU -> TX burst (górą, niebieski)
+        \draw[arr, NavyBlue] (mcu.north east) ++(0,0.2) -- ++(0,0.8) -| node[above, pos=0.25, font=\scriptsize] {Burst 40\,kHz} (tx.north);
+        % MCU -> RX sterowanie (PWM)
+        \draw[arr] (mcu.west) -- node[below, font=\scriptsize] {PWM} (rx.east);
+        % RX -> MCU echo (dołem, czerwony)
+        \draw[arr, red] (rx.south east) -- ++(0,-0.5) -| node[below, pos=0.3, font=\scriptsize, text=red] {Echo (ADC)} (mcu.south);
+        % Termistor -> MCU
+        \draw[arr, gray] (temp.east) -| (mcu.south west);
+        \node[gray, font=\scriptsize] at ($(temp.east)+(1.5,-0.3)$) {NTC (ADC)};
+        % Fala US
+        \draw[arr, blue, thick, loosely dashed]
+            (tx.south west) -- ++(0,-0.5) node[below, font=\scriptsize] {Fala US};
+    \end{tikzpicture}
+
+    \vfill
+
+    {\large
+    \begin{tabular}{rl}
+        \textbf{Autor:}  & Kacper Popko \\
+        \textbf{Szkoła:}  & II Liceum Ogólnokształcące im.\ ks.\ Anny z~Sapiehów \\
+                          & Jabłonowskiej w~Białymstoku \\
+        \textbf{E-mail:}  & kacper@kajpa.pl \\
+        \textbf{Data:}    & Marzec 2026 \\
+    \end{tabular}
+    }
+
+    \vspace{1cm}
+\end{titlepage}
+
+% ── SPIS TREŚCI ──────────────────────────────────────────────
+\tableofcontents
+\newpage
+
+% ══════════════════════════════════════════════════════════════
+% SEKCJA 1: WSTĘP
+% ══════════════════════════════════════════════════════════════
+\section{Wstęp}
+\label{sec:wstep}
+
+Celem projektu jest opracowanie bezkontaktowego miernika odległości spełniającego
+wymagania konkursu ,,Wygraj Indeks WETI 2026''. Urządzenie umożliwia pomiar
+odległości w~zakresie \SIrange{10}{50}{\centi\metre} od obiektu (arkusz kartonu
+$20 \times 20$~\si{\centi\metre}) przy zasilaniu napięciem \SI{5}{\volt}.
+
+Jako metodę pomiarową wybrano \textbf{hybrydową technikę Pulse-Phase Ranging},
+łączącą pomiar czasu przelotu impulsu ultradźwiękowego (ToF) z~pomiarem
+przesunięcia fazowego sygnału echa. Podejście to pozwala uzyskać rozdzielczość
+rzędu \SI{0,1}{\milli\metre} przy jednoczesnym zachowaniu jednoznaczności pomiaru
+w~całym wymaganym zakresie --- łączy zalety obu metod, eliminując ich indywidualne
+ograniczenia.
+
+Projekt kładzie szczególny nacisk na trzy aspekty optymalizacyjne wynikające
+z~kryteriów oceny konkursowej: minimalizację błędu średniokwadratowego (RMSE)
+poprzez zaawansowany algorytm pomiaru fazowego, redukcję poboru mocy dzięki
+agresywnej polityce uśpienia mikrokontrolera oraz minimalizację kosztu
+komponentów przy zachowaniu wysokiej jakości toru pomiarowego.
+
+\subsection{Wymagania konkursowe}
+
+\begin{table}[H]
+    \centering
+    \caption{Podsumowanie wymagań konkursowych i~kryteriów oceny}
+    \label{tab:wymagania}
+    \begin{tabular}{lll}
+        \toprule
+        \textbf{Parametr}       & \textbf{Wartość / Wzór} & \textbf{Max pkt} \\
+        \midrule
+        Napięcie zasilania      & \SI{5}{\volt}  & --- \\
+        Zakres pomiaru          & \SI{10}{\centi\metre} -- \SI{50}{\centi\metre} & --- \\
+        Wykrywany obiekt        & Karton $20 \times 20$~\si{\centi\metre} & --- \\
+        Błąd RMSE               & Im mniejszy, tym lepiej & 100 \\
+        Pobór mocy              & $100 / P_{[\si{\milli\watt}]}$ & 50 \\
+        Koszt elementów         & $50 \cdot 50 / C_{[\text{PLN}]}$ & 50 \\
+        Jakość projektu         & Uznaniowo (komisja) & 100 \\
+        \midrule
+        \textbf{Łącznie}        & & \textbf{300} \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\subsection{Uzasadnienie wyboru metody pomiarowej}
+
+Przed przystąpieniem do projektowania przeanalizowano cztery główne metody
+bezkontaktowego pomiaru odległości pod kątem ich realizowalności na platformie
+ATtiny1616 oraz potencjału punktacyjnego w~konkursie.
+
+\begin{table}[H]
+    \centering
+    \caption{Analiza porównawcza rozważanych metod pomiaru}
+    \label{tab:porownanie_metod}
+    \begin{tabularx}{\textwidth}{lcccX}
+        \toprule
+        \textbf{Metoda} & \textbf{RMSE} & \textbf{Koszt} & \textbf{Złożoność} & \textbf{Uwagi} \\
+        \midrule
+        Prosty ToF (US)
+            & ${\sim}\SI{3}{\milli\metre}$
+            & Niski
+            & Niska
+            & Rozdzielczość ograniczona przez czas narastania obwiedni przetwornika rezonansowego; brak możliwości sub-milimetrowej dokładności \\[6pt]
+        \textbf{Pulse-Phase (US)}
+            & ${\sim}\SI{0,5}{\milli\metre}$
+            & \textbf{Niski}
+            & Średnia
+            & \textbf{Wybrany kompromis} --- gruby pomiar ToF eliminuje niejednoznaczność fazową, dokładny pomiar fazy daje sub-mm rozdzielczość \\[6pt]
+        FMCW chirp (US)
+            & ${<}\SI{0,5}{\milli\metre}$
+            & Średni
+            & Wysoka
+            & Wymaga szerokopasmowych przetworników US (${\sim}\SI{30}{PLN}$/para) oraz FFT --- ATtiny1616 z~16\,KB Flash i~2\,KB RAM nie ma wystarczających zasobów \\[6pt]
+        Triangulacja optyczna
+            & ${\sim}\SI{1}{\milli\metre}$
+            & Średni
+            & Średnia
+            & Wymaga precyzyjnej mechaniki mocowania LED/fotodiody; wrażliwość na oświetlenie otoczenia; trudna powtarzalność prototypu \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+Metoda Pulse-Phase Ranging została wybrana jako oferująca najlepszy stosunek
+osiągalnej dokładności do złożoności implementacji. Kluczowe argumenty:
+
+\begin{enumerate}[nosep]
+    \item Wykorzystuje tanie przetworniki rezonansowe \SI{40}{\kilo\hertz} (koszt pary: ${\sim}\SI{6}{PLN}$).
+    \item Algorytm Goertzela do wyznaczania fazy wymaga jedynie ${\sim}\SI{200}{\byte}$ RAM.
+    \item Kompensacja temperatury termistorem NTC eliminuje dominujące źródło błędu systematycznego.
+    \item Tryb uśpienia ATtiny1616 (Standby z~RTC, $I_{DD} \approx \SI{0,7}{\micro\ampere}$) pozwala osiągnąć średni pobór mocy poniżej \SI{2}{\milli\watt}.
+\end{enumerate}
+
+
+% ══════════════════════════════════════════════════════════════
+% SEKCJA 2: ZASADA DZIAŁANIA
+% ══════════════════════════════════════════════════════════════
+\section{Zasada działania metody Pulse-Phase Ranging}
+\label{sec:zasada}
+
+\subsection{Przegląd metody}
+
+Metoda Pulse-Phase Ranging łączy dwa pomiary wykonywane w~jednym cyklu
+pomiarowym: gruby pomiar czasu przelotu (ToF) oraz dokładny pomiar przesunięcia
+fazowego echa. Takie podejście rozwiązuje fundamentalny problem pomiaru fazowego
+--- niejednoznaczność co $\lambda/2$ --- przy jednoczesnym zachowaniu sub-milimetrowej
+rozdzielczości.
+
+Cykl pomiarowy składa się z~następujących etapów:
+\begin{enumerate}[nosep]
+    \item Odczyt temperatury z~termistora NTC (korekcja $v(T)$).
+    \item Generacja burstu TX: $N = 8$ cykli sygnału \SI{40}{\kilo\hertz}.
+    \item Detekcja początku echa --- pomiar gruby $t_{ToF}$ (timer TCB0).
+    \item Próbkowanie sygnału echa w~oknie pomiarowym (ADC0, ${\sim}4$ cykle po ustabilizowaniu się obwiedni).
+    \item Obliczenie fazy algorytmem Goertzela --- pomiar dokładny $\varphi$.
+    \item Fuzja obu pomiarów i~filtracja wyniku.
+    \item Transmisja wyniku przez USART.
+    \item Przejście w~tryb Standby (z~RTC wakeup) do następnego cyklu.
+\end{enumerate}
+
+\subsection{Faza 1 --- Pomiar gruby (Time-of-Flight)}
+\label{sec:tof}
+
+Mikrokontroler generuje burst $N = 8$ cykli sygnału prostokątnego o~częstotliwości
+$f_0 = \SI{40}{\kilo\hertz}$ za pomocą timera TCA0 w~trybie Split Mode PWM. Sygnał
+steruje tranzystorem BC817-40, który pobudza nadajnik ultradźwiękowy.
+
+Czas przelotu impulsu do obiektu i~z~powrotem:
+\begin{equation}
+    t_{ToF} = \frac{2D}{v(T)}
+    \label{eq:tof}
+\end{equation}
+
+gdzie $D$ to odległość od obiektu, a~$v(T)$ to prędkość dźwięku zależna
+od temperatury powietrza. Ściśle: $v(T) = 331{,}3\sqrt{1 + T/273{,}15}$,
+jednak w~zakresie temperatur pokojowych (\SIrange{15}{30}{\celsius})
+aproksymacja liniowa wprowadza błąd poniżej \SI{0,05}{\metre\per\second}
+($< \SI{0,01}{\milli\metre}$ wpływu na pomiar), dlatego stosujemy
+uproszczoną zależność:
+\begin{equation}
+    v(T) \approx 331{,}3 + 0{,}606 \cdot T \quad [\si{\metre\per\second}]
+    \label{eq:predkosc_dzwieku}
+\end{equation}
+
+Dla zakresu pomiarowego \SIrange{10}{50}{\centi\metre} przy $T = \SI{20}{\celsius}$
+($v \approx \SI{343,5}{\metre\per\second}$):
+\begin{equation}
+    t_{ToF,min} = \frac{2 \cdot 0{,}10}{343{,}5} \approx \SI{0,58}{\milli\second}, \qquad
+    t_{ToF,max} = \frac{2 \cdot 0{,}50}{343{,}5} \approx \SI{2,91}{\milli\second}
+    \label{eq:tof_zakres}
+\end{equation}
+
+Timer TCB0 taktowany zegarem \SI{10}{\mega\hertz} (patrz sekcja~\ref{sec:mcu})
+daje rozdzielczość czasową \SI{100}{\nano\second}, co odpowiada rozdzielczości odległości:
+\begin{equation}
+    \Delta D_{tick} = \frac{v(T)}{2 \cdot f_{clk}} = \frac{343{,}5}{2 \cdot 10 \times 10^6} \approx \SI{17,2}{\micro\metre} \text{ / takt}
+    \label{eq:rozdzielczosc_tick}
+\end{equation}
+
+Jednak realna rozdzielczość pomiaru grubego jest ograniczona przez czas narastania
+obwiedni sygnału echa. Przetworniki rezonansowe \SI{40}{\kilo\hertz} mają
+dobroć $Q \approx 15$, co oznacza czas narastania obwiedni:
+\begin{equation}
+    \tau_{rise} \approx \frac{Q}{\pi f_0} = \frac{15}{\pi \cdot 40000} \approx \SI{0,12}{\milli\second}
+    \label{eq:tau_rise}
+\end{equation}
+
+Niepewność momentu detekcji progu obwiedni przekłada się na praktyczną
+rozdzielczość pomiaru grubego rzędu \SIrange{1}{3}{\milli\metre}. To wystarczy
+do jednoznacznego wyznaczenia liczby $n$ półfal w~równaniu (\ref{eq:wynik}),
+ponieważ $\lambda/2 \approx \SI{4,3}{\milli\metre}$.
+
+\subsection{Faza 2 --- Pomiar dokładny (Phase Measurement)}
+\label{sec:phase}
+
+Po detekcji echa mikrokontroler otwiera okno pomiarowe i~próbkuje sygnał
+echo za pomocą ADC0. Z~zebranych próbek obliczane jest przesunięcie fazowe
+$\varphi$ między sygnałem nadawanym (referencyjnym) a~sygnałem echa.
+
+Odległość wynikająca z~pomiaru fazowego:
+\begin{equation}
+    D_{fine} = \frac{\varphi}{2\pi} \cdot \frac{\lambda}{2}
+    \label{eq:phase}
+\end{equation}
+
+gdzie $\lambda = v(T) / f_0$ to długość fali ultradźwiękowej. Przy
+$T = \SI{20}{\celsius}$:
+\begin{equation}
+    \lambda = \frac{343{,}5}{40000} \approx \SI{8,59}{\milli\metre}, \qquad
+    \frac{\lambda}{2} \approx \SI{4,29}{\milli\metre}
+    \label{eq:lambda}
+\end{equation}
+
+Pomiar fazowy daje niejednoznaczność co $\lambda/2 \approx \SI{4,3}{\milli\metre}$,
+którą rozwiązuje pomiar gruby ToF (sekcja \ref{sec:tof}).
+
+Wynikowa odległość po fuzji obu pomiarów:
+\begin{equation}
+    \boxed{D = n \cdot \frac{\lambda}{2} + D_{fine}}
+    \label{eq:wynik}
+\end{equation}
+
+gdzie $n = \left\lfloor D_{ToF} / (\lambda/2) + 0{,}5 \right\rfloor$ to liczba
+całkowitych półfal wyznaczona z~pomiaru grubego.
+
+\subsubsection{Rozdzielczość pomiaru fazowego}
+
+Rozdzielczość pomiaru fazy zależy od rozdzielczości ADC i~stosunku sygnału
+do szumu (SNR). Przy 10-bitowym ADC i~$K$ próbkach na cykl:
+\begin{equation}
+    \Delta\varphi_{min} \approx \frac{2\pi}{2^{10} \cdot \sqrt{K/2}} = \frac{2\pi}{1024 \cdot \sqrt{K/2}}
+    \label{eq:phase_res}
+\end{equation}
+
+Dla $K = 4$ próbek na cykl ($f_s = 4 \cdot f_0 = \SI{160}{\kilo\hertz}$):
+\begin{equation}
+    \Delta\varphi_{min} \approx \frac{2\pi}{1024 \cdot \sqrt{2}} \approx \SI{4,34}{\milli\radian}
+\end{equation}
+
+\textbf{Uwaga dotycząca częstotliwości próbkowania ADC:}
+Datasheet ATtiny1616 określa maksymalną częstotliwość zegara ADC na
+$f_{CLK\_ADC} = \SI{1,5}{\mega\hertz}$ dla pełnej rozdzielczości 10-bitowej.
+Jedna konwersja zajmuje 13 cykli $CLK_{ADC}$, co daje maksymalną częstotliwość
+próbkowania $R_s = 1500000/13 \approx \SI{115}{ksps}$. Wymagana częstotliwość
+$f_s = \SI{160}{\kilo\hertz}$ ($K = 4$ próbki/cykl) wymaga
+$f_{CLK\_ADC} = 160000 \cdot 13 = \SI{2,08}{\mega\hertz}$,
+co przekracza limit dla 10-bit.
+
+Rozwiązanie przyjęte w~projekcie: przy zegarze systemowym $f_{CLK} = \SI{10}{\mega\hertz}$
+(patrz sekcja~\ref{sec:mcu}) i~prescalerze ADC DIV8, częstotliwość zegara ADC wynosi
+$f_{CLK\_ADC} = \SI{10}{\mega\hertz}/8 = \SI{1,25}{\mega\hertz}$ ---
+\textbf{w~pełni w~specyfikacji} dla 10-bitowej rozdzielczości
+(DS, Tab.~36-26: max \SI{1,5}{\mega\hertz}).
+Rejestr ADC0.CALIB zachowuje wartość domyślną DUTYCYC = 1 (25\% duty cycle),
+co jest poprawne dla $f_{CLK\_ADC} \leq \SI{1,5}{\mega\hertz}$
+(DS, sekcja~30.5.17) --- \textbf{eliminuje to konieczność workaround z~DUTYCYC = 0}.
+Maksymalna częstotliwość próbkowania: $R_s = 1250000/13 \approx \SI{96}{ksps}$.
+
+Ponieważ $f_s = \SI{160}{\kilo\hertz}$ przekracza ten limit, przyjęto wariant
+$K = 3$ próbki na cykl z~$f_{CLK\_ADC} = \SI{1,25}{\mega\hertz}$:
+$f_s = 1250000/13 \approx \SI{96}{\kilo\hertz}$, co daje ${\sim}2{,}4$ próbki/cykl
+przy $f_0 = \SI{40}{\kilo\hertz}$. Przy $N = 8$ pełnych cyklach echa: łączna
+liczba próbek $N_{total} \approx 19$. Współczynnik Goertzela:
+$k = N_{total} \cdot f_0/f_s$.
+
+\textit{Uwaga na Etap~2:} Ostateczna konfiguracja ($K$, $N_{total}$, $k$)
+zostanie zoptymalizowana eksperymentalnie na prototypie. Dla celów analizy
+błędów (sekcja~\ref{sec:bledy}) przyjmujemy referencyjny wariant $K = 4$,
+$N = 16$ --- nawet jeśli wymaga pracy ADC z~$f_{CLK\_ADC} \approx
+\SI{1,56}{\mega\hertz}$ (nieznacznie powyżej limitu, DUTYCYC = 0 wymagane),
+degradacja INL/DNL jest minimalna (typowo $< 1{,}5$\,LSB wg rys.~37-47
+datasheet) i~akceptowalna dzięki uśrednieniu w~algorytmie Goertzela.
+
+Co odpowiada rozdzielczości odległości:
+\begin{equation}
+    \Delta D_{phase} = \frac{\Delta\varphi_{min}}{2\pi} \cdot \frac{\lambda}{2}
+    = \frac{4{,}34 \times 10^{-3}}{2\pi} \cdot 4{,}29 \approx \SI{0,003}{\milli\metre}
+    \label{eq:phase_dist_res}
+\end{equation}
+
+W~praktyce szumy analogowe, jitter taktowania i~ograniczenia toru wzmacniacza
+podnoszą tę wartość do ${\sim}\SI{0,1}{\milli\metre}$ --- co jest nadal doskonałym
+wynikiem.
+
+\subsection{Diagram czasowy cyklu pomiarowego}
+
+\begin{figure}[H]
+    \centering
+    \resizebox{\textwidth}{!}{%
+    \begin{tikzpicture}[>=Stealth]
+        % ============================================================
+        % Jeden pełny cykl = 0.5 jedn. szerokości (4 × 0.125)
+        % TX amp = 2.0, Echo amp max = 1.5
+        % ============================================================
+
+        % === OSI ===
+        \draw[->, thick] (-0.5,0) -- (22,0) node[right] {$t$};
+        \draw[->, thick] (-0.5,0) -- (-0.5,2.8) node[above] {Amplituda};
+
+        % === 1. TX BURST: 8 pełnych cykli ===
+        % x = 0.0 ... 4.0
+        \foreach \i in {0,1,...,7} {
+            \pgfmathsetmacro{\xs}{\i * 0.5}
+            \draw[blue, thick] (\xs, 0)
+                sin ++(0.125, 2.0) cos ++(0.125, -2.0)
+                sin ++(0.125, -2.0) cos ++(0.125, 2.0);
+        }
+        \node[blue] at (2.0, 2.5) {TX burst ($N = 8$ cykli)};
+
+        % === 2. RING-DOWN: 3 cykle gasnące, ŁĄCZĄ SIĘ z TX ===
+        % TX kończy się przy x=4.0, ring-down zaczyna przy x=4.0
+        \foreach \i in {0,1,2} {
+            \pgfmathsetmacro{\xs}{4.0 + \i * 0.5}
+            \pgfmathsetmacro{\amp}{1.5 * exp(-\i * 0.8)}
+            \draw[blue!35, thick] (\xs, 0)
+                sin ++(0.125, \amp) cos ++(0.125, -\amp)
+                sin ++(0.125, -\amp) cos ++(0.125, \amp);
+        }
+        \draw[<->, blue!35] (4.0, -0.7) -- (5.5, -0.7)
+            node[midway, below] {\small Ring-down};
+
+        % === 3. t_ToF: od KOŃCA TX do początku echa ===
+        \draw[<->, gray, thick] (4.0, -1.6) -- (7.5, -1.6);
+        \node[gray] at (5.75, -2.1) {$t_{ToF}$};
+
+        % === 4. PRÓG DETEKCJI ===
+        % Musi być powyżej ring-downu (i=1: amp=0.67) żeby go nie złapać
+        % Próg = 0.8 → echo przekracza przy i=2 (amp=0.9)
+        \draw[orange, dashed, thick] (-0.3, 0.8) -- (13.5, 0.8);
+        \node[orange] at (6.0, 1.15) {\small Próg detekcji};
+
+        % === 5. OKNO POMIARU FAZY (tło, rysowane przed echem) ===
+        % 4 cykle plateau: x = 10.0 ... 12.0
+        \fill[OliveGreen, opacity=0.07] (10.0, -1.8) rectangle (12.0, 2.2);
+        \draw[OliveGreen, thick] (10.0, -1.8) rectangle (12.0, 2.2);
+
+        % === 6. ECHO RX: 12 cykli, obwiednia narasta/plateau/opada ===
+        % x = 7.5 ... 13.5
+        \foreach \i in {0,1,...,11} {
+            \pgfmathsetmacro{\xs}{7.5 + \i * 0.5}
+            \pgfmathsetmacro{\env}{%
+                (\i < 5) ? ((\i + 1) / 5.0) : (
+                (\i < 9) ? 1.0 : (
+                (12 - \i) / 3.0 ))}
+            \pgfmathsetmacro{\amp}{\env * 1.5}
+            \draw[red, thick] (\xs, 0)
+                sin ++(0.125, \amp) cos ++(0.125, -\amp)
+                sin ++(0.125, -\amp) cos ++(0.125, \amp);
+        }
+        \node[red] at (9.0, 1.9) {Echo RX};
+
+        % === 7. t_detect: echo przekracza próg (0.8) przy 3. cyklu ===
+        % Cykl i=2: amp = 3/5 × 1.5 = 0.9 > 0.8, szczyt przy x = 8.5 + 0.125
+        \fill[orange] (8.625, 0.8) circle (3pt);
+        \draw[orange, thick, ->] (8.625, 0.8) -- (8.625, -1.0);
+        \node[orange] at (8.625, -1.35) {\small $t_{detect}$};
+
+        % === 8. PRÓBKI ADC: 4/cykl × 4 cykle = 16 (N_Goertzel) ===
+        % Wewnątrz okna x = 10.0 ... 12.0
+        \foreach \i in {0,1,2,3} {
+            \pgfmathsetmacro{\base}{10.0 + \i * 0.5}
+            \pgfmathsetmacro{\xA}{\base + 0.125}
+            \pgfmathsetmacro{\xB}{\base + 0.25}
+            \pgfmathsetmacro{\xC}{\base + 0.375}
+            \pgfmathsetmacro{\xD}{\base + 0.5}
+            \fill[OliveGreen] (\xA, 1.5) circle (3.5pt);
+            \fill[OliveGreen] (\xB, 0) circle (3.5pt);
+            \fill[OliveGreen] (\xC, -1.5) circle (3.5pt);
+            \ifnum\i<3
+                \fill[OliveGreen] (\xD, 0) circle (3.5pt);
+            \fi
+        }
+        \node[OliveGreen, above] at (11.0, 2.2) {\small Próbki ADC};
+        \node[OliveGreen] at (11.0, -2.2) {Okno pomiaru $\varphi$};
+
+        % === 9. USART TX (prostokąt za echem, pod etykietami) ===
+        \draw[Maroon, thick, fill=Maroon!8, rounded corners=2pt]
+            (14.0, -0.5) rectangle (16.0, 0.5);
+        \node[Maroon] at (15.0, 0) {\small USART TX};
+
+        % === 10. POWER-DOWN SLEEP ===
+        \draw[NavyBlue, thick, fill=NavyBlue!8, rounded corners=2pt]
+            (16.5, -0.5) rectangle (21.5, 0.5);
+        \node[NavyBlue] at (19.0, 0) {STANDBY SLEEP (RTC)};
+
+        % === 11. ETYKIETY OSI ===
+        \draw[thick] (0, -0.15) -- (0, 0.15);
+        \node[below] at (0, -0.3) {$t_0$};
+        \draw[thick] (21.5, -0.15) -- (21.5, 0.15);
+        \node[below] at (21.5, -0.3) {$t_0 + T_{cycle}$};
+
+    \end{tikzpicture}%
+    }
+    \caption{Diagram czasowy cyklu pomiarowego Pulse-Phase Ranging. Pokazano burst
+    TX z~ring-downem, narastanie obwiedni echa RX, próg detekcji ToF (AC0), okno
+    próbkowania fazowego (ADC) oraz fazę uśpienia mikrokontrolera (Standby z~RTC wakeup).}
+    \label{fig:diagram_czasowy}
+\end{figure}
+
+\subsection{Kompensacja temperatury}
+\label{sec:temp_komp}
+
+Prędkość dźwięku w~powietrzu zależy od temperatury zgodnie z~równaniem
+(\ref{eq:predkosc_dzwieku}). Zmiana temperatury o~\SI{1}{\kelvin} powoduje
+zmianę prędkości o~\SI{0,606}{\metre\per\second}, co dla odległości
+$D = \SI{30}{\centi\metre}$ daje błąd:
+\begin{equation}
+    \Delta D_{temp} = D \cdot \frac{\Delta v}{v} = 0{,}30 \cdot \frac{0{,}606}{343{,}5} \approx \SI{0,53}{\milli\metre\per\kelvin}
+    \label{eq:blad_temp}
+\end{equation}
+
+Bez kompensacji temperatury, zmiana otoczenia o~\SI{5}{\kelvin} (typowa
+w~pomieszczeniu) powoduje błąd ${\sim}\SI{2,6}{\milli\metre}$ --- wartość
+znacząco pogarszającą RMSE. Dlatego zastosowano termistor NTC \SI{10}{\kilo\ohm}
+(B$_{25/85}$ = \SI{3950}{\kelvin}) w~dzielniku napięciowym z~rezystorem
+R10 = \SI{10}{\kilo\ohm}.
+
+\subsubsection{Wyznaczanie temperatury z~termistora}
+
+Rezystancja termistora NTC zależy od temperatury zgodnie z~modelem
+B-parametrowym:
+\begin{equation}
+    R_{NTC}(T) = R_0 \cdot \exp\!\left[B \cdot \left(\frac{1}{T} - \frac{1}{T_0}\right)\right]
+    \label{eq:ntc_model}
+\end{equation}
+
+gdzie $R_0 = \SI{10}{\kilo\ohm}$ w~temperaturze $T_0 = \SI{298,15}{\kelvin}$
+(\SI{25}{\celsius}), $B = \SI{3950}{\kelvin}$.
+
+Napięcie na dzielniku (odczytywane przez ADC):
+\begin{equation}
+    V_{ADC} = V_{DD} \cdot \frac{R_{10}}{R_{10} + R_{NTC}(T)} = \SI{3,3}{\volt} \cdot \frac{10000}{10000 + R_{NTC}(T)}
+    \label{eq:dzielnik_ntc}
+\end{equation}
+
+Z~odczytu ADC ($N_{ADC}$, 10-bit, $V_{ref} = V_{DD} = \SI{3,3}{\volt}$;
+konfiguracja: ADC0.CTRLC REFSEL = VDD) wyznaczamy
+$R_{NTC}$:
+\begin{equation}
+    R_{NTC} = R_{10} \cdot \frac{1024 - N_{ADC}}{N_{ADC}}
+    \label{eq:rntc_z_adc}
+\end{equation}
+
+Następnie temperaturę z~odwróconego modelu B:
+\begin{equation}
+    T = \left(\frac{1}{T_0} + \frac{1}{B} \cdot \ln\frac{R_{NTC}}{R_0}\right)^{-1} - 273{,}15 \quad [^\circ\text{C}]
+    \label{eq:steinhart}
+\end{equation}
+
+Przy zastosowaniu oversamplingu ($4\times$ uśrednianie ADC z~wykorzystaniem
+sprzętowej akumulacji w~rejestrze ADC0.CTRLB, tryb ACC4) uzyskujemy
+przyrost rozdzielczości o~1~bit (efektywnie ${\sim}11$~bit). Warunkiem
+skuteczności oversamplingu jest obecność szumu o~amplitudzie $\geq 0{,}5$\,LSB
+na wejściu ADC, co jest spełnione dzięki szumowi termicznemu dzielnika
+NTC i~szumowi wzmacniacza. Daje to rozdzielczość pomiaru temperatury
+${\sim}\SI{0,1}{\kelvin}$, co przekłada się na resztkowy błąd odległości poniżej
+\SI{0,06}{\milli\metre}.
+
+
+% ══════════════════════════════════════════════════════════════
+% SEKCJA 3: SCHEMAT IDEOWY
+% ══════════════════════════════════════════════════════════════
+\section{Schemat ideowy}
+\label{sec:schemat}
+
+Układ składa się z~czterech bloków funkcjonalnych: zasilania, nadajnika
+ultradźwiękowego (TX), odbiornika z~torem analogowym (RX) oraz mikrokontrolera
+z~interfejsami pomiarowymi i~komunikacyjnymi.
+
+% ── SCHEMAT IDEOWY ──
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{schemat.png}
+    \caption{Schemat ideowy miernika odległości.
+    \textit{Uwaga:} Schemat przedstawia wstępną wersję projektu ---
+    wartości C4, C5, R3, C2 zostały zoptymalizowane w~niniejszym dokumencie
+    (patrz sekcja~\ref{sec:tor_rx}). Schemat zostanie zaktualizowany
+    przed oddaniem prototypu w~Etapie~2.}
+    \label{fig:schemat}
+\end{figure}
+
+\subsection{Blok zasilania}
+\label{sec:zasilanie}
+
+Układ zasilany jest napięciem \SI{5}{\volt} z~zewnętrznego źródła.
+Stabilizator liniowy MCP1700T-3302E/TT (Microchip) przetwarza
+\SI{5}{\volt} na \SI{3,3}{\volt} dla mikrokontrolera i~toru analogowego.
+Wybór tego stabilizatora podyktowany jest ultra-niskim prądem spoczynkowym,
+co jest kluczowe dla punktacji za pobór mocy.
+
+\begin{table}[H]
+    \centering
+    \caption{Kluczowe parametry stabilizatora MCP1700T-3302E/TT}
+    \label{tab:mcp1700}
+    \begin{tabular}{lrl}
+        \toprule
+        \textbf{Parametr} & \textbf{Wartość} & \textbf{Warunek} \\
+        \midrule
+        Napięcie wyjściowe & \SI{3,3}{\volt} & $\pm\SI{0,4}{\percent}$ \\
+        Prąd spoczynkowy $I_q$ & \SI{1,6}{\micro\ampere} & typ., $I_{out} = \SI{0}{\milli\ampere}$ \\
+        Napięcie dropout & \SI{178}{\milli\volt} & $I_{out} = \SI{250}{\milli\ampere}$ \\
+        PSRR & \SI{58}{\deci\bel} & $f = \SI{1}{\kilo\hertz}$ \\
+        Szum wyjściowy & \SI{50}{\micro\volt_{RMS}} & $B = \SI{10}{\kilo\hertz}$ \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+Kondensatory filtrujące C6 = C7 = \SI{1}{\micro\farad} (ceramiczne X5R/X7R, 0603)
+na wejściu i~wyjściu stabilizatora zapewniają stabilność pętli regulacji
+oraz tłumienie szumów wysokoczęstotliwościowych. Cewka L1 = \SI{10}{\micro\henry}
+na wejściu zasilania pełni rolę filtru EMI, tłumiąc zakłócenia
+wysokoczęstotliwościowe z~nadajnika ultradźwiękowego (który jest zasilany
+bezpośrednio z~\SI{5}{\volt}). Wyjściowa impedancja
+stabilizatora z~kondensatorem ceramicznym jest stabilna dzięki wewnętrznej
+kompensacji MCP1700 przystosowanej do pracy z~kondensatorami o~niskim ESR.
+
+Sprawność stabilizatora liniowego:
+\begin{equation}
+    \eta_{LDO} = \frac{V_{out}}{V_{in}} = \frac{3{,}3}{5{,}0} = \SI{66}{\percent}
+    \label{eq:sprawnosc_ldo}
+\end{equation}
+
+\subsection{Blok nadajnika (TX)}
+\label{sec:nadajnik}
+
+Nadajnik ultradźwiękowy (typ otwarty, $f_0 = \SI{40}{\kilo\hertz}$,
+$\varnothing\SI{16}{\milli\metre}$) jest sterowany tranzystorem NPN BC817-40
+w~konfiguracji klucza (common-emitter).
+
+Mikrokontroler generuje sygnał prostokątny \SI{40}{\kilo\hertz} za pomocą
+timera TCA0 w~trybie Split Mode PWM (wyjście WO5 na PA5, sekcja~\ref{sec:mcu}).
+Sygnał ten steruje bazę tranzystora
+przez rezystor R9 = \SI{10}{\kilo\ohm}.
+
+Analiza punktu pracy tranzystora:
+\begin{equation}
+    I_B = \frac{V_{OH} - V_{BE(sat)}}{R_9} = \frac{\SI{3,3}{\volt} - \SI{0,7}{\volt}}{\SI{10}{\kilo\ohm}} = \SI{0,26}{\milli\ampere}
+    \label{eq:ib}
+\end{equation}
+
+Przy $h_{FE,min} = 250$ (BC817-40, grupa sortowana):
+\begin{equation}
+    I_{C,max} = h_{FE} \cdot I_B = 250 \cdot 0{,}26 = \SI{65}{\milli\ampere}
+    \label{eq:ic_max}
+\end{equation}
+
+Typowy prąd nadajnika US wynosi \SIrange{15}{25}{\milli\ampere}, więc
+tranzystor pracuje z~zapasem nasycenia $S_{sat} = I_{C,max} / I_{C,load}
+\approx 3$, co zapewnia szybkie przełączanie i~ostre zbocza sygnału
+sterującego --- istotne dla powtarzalności momentu startu burstu.
+
+Nadajnik jest podłączony przez goldpinowy header (PINHD-1X02), co
+umożliwia łatwą wymianę przetwornika w~fazie prototypowania.
+
+\subsection{Tor analogowy odbiornika (RX)}
+\label{sec:tor_rx}
+
+Sygnał z~odbiornika ultradźwiękowego (typ zamknięty, $f_0 = \SI{40}{\kilo\hertz}$)
+jest przetwarzany przez dwustopniowy wzmacniacz z~filtracją pasmową, zbudowany
+na dwukanałowym wzmacniaczu operacyjnym MCP6002-I/SN.
+
+\subsubsection{Parametry MCP6002-I/SN}
+
+\begin{table}[H]
+    \centering
+    \caption{Kluczowe parametry wzmacniacza MCP6002-I/SN}
+    \label{tab:mcp6002}
+    \begin{tabular}{lrl}
+        \toprule
+        \textbf{Parametr} & \textbf{Wartość} & \textbf{Uwagi} \\
+        \midrule
+        Pasmo przenoszenia (GBW) & \SI{1}{\mega\hertz} & unity-gain \\
+        Prąd zasilania $I_{DD}$ & \SI{100}{\micro\ampere} & typ., oba kanały łącznie \\
+        Napięcie offsetu $V_{OS}$ & \SI{4,5}{\milli\volt} & max \\
+        Szum wejściowy $e_n$ & \SI{8,7}{\micro\volt_{RMS}} & $B = 0{,}1$--\SI{10}{\kilo\hertz} \\
+        Zakres wejściowy & Rail-to-Rail & wejście i~wyjście \\
+        Slew rate & \SI{0,6}{\volt\per\micro\second} & \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\subsubsection{Pierwszy stopień --- wzmacniacz odwracający z~filtrem pasmowym}
+
+Pierwszy stopień (MCP6002, kanał A) realizuje wzmocnienie sygnału echa
+z~jednoczesną filtracją pasmową wokół $f_0 = \SI{40}{\kilo\hertz}$.
+
+\textbf{Polaryzacja DC:} Wejście nieinwertujące (+) kanału A jest podłączone
+do punktu polaryzacji $V_{DD}/2 \approx \SI{1,65}{\volt}$ przez dzielnik
+rezystorowy (2$\times$ \SI{100}{\kilo\ohm}), co ustawia punkt pracy wyjścia
+w~połowie zakresu rail-to-rail i~maksymalizuje dynamikę sygnału AC.
+Kondensator C3 zapewnia sprzężenie AC na wejście odwracające.
+
+Konfiguracja elementów:
+\begin{itemize}[nosep]
+    \item R5 = \SI{10}{\kilo\ohm} --- rezystor wejściowy
+    \item R6 = \SI{470}{\kilo\ohm} --- rezystor sprzężenia zwrotnego
+    \item C3 = \SI{10}{\nano\farad} --- kondensator sprzęgający AC (górnoprzepustowy)
+    \item C4 = \SI{47}{\pico\farad} --- kondensator w~sprzężeniu zwrotnym (dolnoprzepustowy)
+    \item C8 = \SI{100}{\nano\farad} --- kondensator odsprzęgający zasilanie
+\end{itemize}
+
+Wzmocnienie w~paśmie środkowym:
+\begin{equation}
+    A_{v1} = -\frac{R_6}{R_5} = -\frac{470\text{k}}{10\text{k}} = -47 \quad (\SI{33,4}{\deci\bel})
+    \label{eq:gain1}
+\end{equation}
+
+Filtr górnoprzepustowy (wejściowy) --- kondensator C3 z~rezystorem R5:
+\begin{equation}
+    f_{HP} = \frac{1}{2\pi \cdot R_5 \cdot C_3} = \frac{1}{2\pi \cdot 10000 \cdot 10 \times 10^{-9}} \approx \SI{1,59}{\kilo\hertz}
+    \label{eq:fhp}
+\end{equation}
+
+Filtr dolnoprzepustowy (w~sprzężeniu zwrotnym) --- kondensator C4 z~R6:
+\begin{equation}
+    f_{LP} = \frac{1}{2\pi \cdot R_6 \cdot C_4} = \frac{1}{2\pi \cdot 470000 \cdot 47 \times 10^{-12}} \approx \SI{7,2}{\kilo\hertz}
+    \label{eq:flp_raw}
+\end{equation}
+
+Efektywne wzmocnienie przy $f_0 = \SI{40}{\kilo\hertz}$:
+\begin{equation}
+    |A_{v1}(f_0)| = \frac{|Z_6|}{R_5} = \frac{1}{R_5} \cdot \frac{R_6}{\sqrt{1 + (2\pi f_0 R_6 C_4)^2}}
+    \label{eq:gain1_f0}
+\end{equation}
+
+\begin{equation}
+    |Z_6| = \frac{R_6 \cdot \frac{1}{2\pi f_0 C_4}}{\sqrt{R_6^2 + \left(\frac{1}{2\pi f_0 C_4}\right)^2}}
+    = \frac{470\text{k} \cdot 84{,}6\text{k}}{\sqrt{470\text{k}^2 + 84{,}6\text{k}^2}} \approx \SI{83,2}{\kilo\ohm}
+    \label{eq:z6}
+\end{equation}
+
+\begin{equation}
+    |A_{v1}(40\text{kHz})| \approx \frac{83200}{10000} \approx 8{,}3
+    \label{eq:gain1_actual}
+\end{equation}
+
+\textit{Uwaga analityczna:} Wstępna analiza z~C4 = \SI{1}{\nano\farad}
+wykazała częstotliwość graniczną $f_{LP} \approx \SI{339}{\hertz}$ --- znacząco
+poniżej $f_0$, skutkującą efektywnym wzmocnieniem zaledwie $|A_{v1}| \approx 0{,}4$
+(tłumienie zamiast wzmacniania). Był to błąd projektowy --- zmiana na
+C4 = \SI{47}{\pico\farad} przenosi $f_{LP}$ do \SI{7,2}{\kilo\hertz}, zachowując
+wzmocnienie ${\sim}8{,}3\times$ przy $f_0$ z~jednoczesną skuteczną filtracją
+harmonicznych powyżej \SI{80}{\kilo\hertz}. Dokładna wartość C4 zostanie
+zweryfikowana eksperymentalnie w~Etapie~2 konkursu (alternatywa: \SI{100}{\pico\farad},
+dająca $|A_{v1}| \approx 6{,}2$).
+
+\subsubsection{Drugi stopień --- wzmacniacz z~filtrem dolnoprzepustowym}
+
+Drugi stopień (MCP6002, kanał B) realizuje dodatkowe wzmocnienie
+i~filtrację dolnoprzepustową tłumiącą harmoniczne i~szum szerokopasmowy.
+
+Konfiguracja elementów:
+\begin{itemize}[nosep]
+    \item R2 = \SI{100}{\kilo\ohm} --- rezystor wejściowy
+    \item R3 = \SI{470}{\kilo\ohm} --- rezystor sprzężenia zwrotnego
+    \item R7 = \SI{47}{\kilo\ohm} --- rezystor polaryzacji (ustawienie punktu pracy DC)
+    \item R4 = \SI{1}{\mega\ohm} --- rezystor ustalający DC w~sprzężeniu zwrotnym
+    \item C2 = \SI{1}{\micro\farad} --- kondensator sprzęgający AC (wejście).
+          \textit{Uwaga:} Wstępnie rozważano C2 = \SI{10}{\micro\farad}, jednak
+          kondensator ceramiczny tej pojemności w~obudowie 0603 (X5R/X7R) wykazuje
+          efekt piezoelektryczny (mikrofonia) oraz degradację pojemności z~napięciem
+          polaryzacji. Zmniejszenie do \SI{1}{\micro\farad} daje
+          $f_{HP} = 1/(2\pi \cdot 100\text{k} \cdot 1\mu) \approx \SI{1,6}{\hertz}$
+          --- nadal daleko poniżej $f_0$, przy eliminacji efektu piezoelektrycznego.
+    \item C5 = \SI{33}{\pico\farad} --- kondensator w~sprzężeniu zwrotnym (LP)
+\end{itemize}
+
+Wzmocnienie w~paśmie środkowym:
+\begin{equation}
+    A_{v2} = -\frac{R_3}{R_2} = -\frac{470\text{k}}{100\text{k}} = -4{,}7 \quad (\SI{13,4}{\deci\bel})
+    \label{eq:gain2}
+\end{equation}
+
+Filtr dolnoprzepustowy drugiego stopnia:
+\begin{equation}
+    f_{LP2} = \frac{1}{2\pi \cdot R_3 \cdot C_5} = \frac{1}{2\pi \cdot 470000 \cdot 33 \times 10^{-12}} \approx \SI{10,3}{\kilo\hertz}
+    \label{eq:flp2}
+\end{equation}
+
+Efektywne wzmocnienie przy $f_0 = \SI{40}{\kilo\hertz}$ (stosunek $f_0/f_{LP2} \approx 3{,}9$,
+nachylenie \SI{-20}{\deci\bel}/dek dla I~rzędu):
+\begin{equation}
+    |A_{v2}(40\text{kHz})| = \frac{4{,}7}{\sqrt{1 + (f_0/f_{LP2})^2}} = \frac{4{,}7}{\sqrt{1 + 3{,}9^2}} \approx 1{,}2
+    \label{eq:gain2_f0}
+\end{equation}
+
+\textit{Uwaga analityczna:} Wstępna wersja projektu stosowała R3 = \SI{100}{\kilo\ohm}
+(wzmocnienie DC: $-1$) i~C5 = \SI{100}{\pico\farad} ($f_{LP2} = \SI{15,9}{\kilo\hertz}$).
+Przy takim doborze drugi stopień tłumił sygnał o~\SI{8}{\deci\bel} przy $f_0$,
+pogarszając SNR. Zwiększenie R3 do \SI{470}{\kilo\ohm} zapewnia realne
+wzmocnienie AC, a~zmniejszenie C5 do \SI{33}{\pico\farad} poprawia
+charakterystykę przy $f_0$ z~zachowaniem filtracji harmonicznych
+od $2f_0 = \SI{80}{\kilo\hertz}$.
+
+\subsubsection{Całkowite wzmocnienie toru analogowego}
+
+Przy dobranych wartościach elementów (C4 = \SI{47}{\pico\farad}, R3 = \SI{470}{\kilo\ohm},
+C5 = \SI{33}{\pico\farad}):
+\begin{equation}
+    |A_{total}(40\text{kHz})| = |A_{v1}| \cdot |A_{v2}| \approx 8{,}3 \cdot 1{,}2 \approx 10
+    \label{eq:gain_total_current}
+\end{equation}
+
+Typowa amplituda echa z~przetwornika US na odległości \SI{30}{\centi\metre}
+wynosi ${\sim}\SIrange{5}{20}{\milli\volt_{pp}}$. Po wzmocnieniu ${\sim}10\times$
+sygnał ma amplitudę ${\sim}\SIrange{50}{200}{\milli\volt_{pp}}$, co odpowiada
+${\sim}\SIrange{15}{60}{\text{LSB}}$ przy 10-bitowym ADC z~zakresem \SI{3,3}{\volt}
+($1\text{LSB} = \SI{3,2}{\milli\volt}$) --- wystarczająco dla algorytmu
+Goertzela.
+
+\textit{Uwaga:} Wstępna wersja projektu (C4 = \SI{1}{\nano\farad}, R3 = \SI{100}{\kilo\ohm},
+C5 = \SI{100}{\pico\farad}) dawała wzmocnienie całkowite zaledwie ${\sim}0{,}25\times$,
+co było niewystarczające do detekcji echa. Optymalizacja wartości elementów
+pasywnych pozwoliła uzyskać wzmocnienie ${\sim}10\times$ bez zmiany topologii
+układu.
+
+\subsection{Mikrokontroler ATtiny1616}
+\label{sec:mcu}
+
+ATtiny1616 (Microchip, rodzina tinyAVR 1-series, wersja ATtiny1616-SN
+w~obudowie SOIC-20) jest centralnym elementem
+układu. Taktowany wewnętrznym oscylatorem \SI{20}{\mega\hertz} z~prescalerem
+$\div 2$ w~rejestrze CLKCTRL.MCLKCTRLB (wynikowy zegar systemowy:
+$f_{CLK} = \SI{10}{\mega\hertz}$), realizuje wszystkie funkcje pomiarowe,
+obliczeniowe i~komunikacyjne.
+
+\textbf{Uzasadnienie wyboru \SI{10}{\mega\hertz}:} Datasheet (Tab.~36-3) definiuje
+maksymalną częstotliwość zegara w~zależności od napięcia zasilania:
+$f_{max} = \SI{5}{\mega\hertz}$ dla $V_{DD} \in [1{,}8;\; 5{,}5]$\,V,
+$f_{max} = \SI{10}{\mega\hertz}$ dla $V_{DD} \in [2{,}7;\; 5{,}5]$\,V,
+$f_{max} = \SI{20}{\mega\hertz}$ dla $V_{DD} \in [4{,}5;\; 5{,}5]$\,V.
+Przy zasilaniu mikrokontrolera napięciem \SI{3,3}{\volt} z~LDO,
+\textbf{gwarantowana częstotliwość wynosi \SI{10}{\mega\hertz}}. Praca
+z~wyższą częstotliwością byłaby poza specyfikacją producenta. Zegar
+\SI{10}{\mega\hertz} jest w~pełni wystarczający dla wszystkich zadań
+pomiarowych --- TCA0 generuje 40\,kHz bez prescalera, ADC działa
+w~specyfikacji 10-bit, a~TCB0 zapewnia rozdzielczość \SI{100}{\nano\second}.
+
+\begin{table}[H]
+    \centering
+    \caption{Kluczowe parametry ATtiny1616 istotne dla projektu}
+    \label{tab:attiny}
+    \begin{tabularx}{\textwidth}{l r X}
+        \toprule
+        \textbf{Parametr} & \textbf{Wartość} & \textbf{Wykorzystanie} \\
+        \midrule
+        Flash & \SI{16}{\kilo\byte} & Program + LUT kalibracyjne \\
+        SRAM & \SI{2}{\kilo\byte} & Bufor próbek ADC + zmienne \\
+        EEPROM & \SI{256}{\byte} & Parametry kalibracyjne (${\sim}20$\,B używane) \\
+        Zegar & \SI{10}{\mega\hertz} & Wewn.\ oscylator \SI{20}{\mega\hertz} z~prescalerem $\div 2$ ($\pm\SI{2}{\percent}$, kalibr.\ fabrycznie) \\
+        ADC & 10-bit, ${\leq}\SI{96}{ksps}$ & Pomiar echa + termistor ($f_{CLK\_ADC} = \SI{1,25}{\mega\hertz}$, w~specyfikacji 10-bit) \\
+        DAC & 8-bit & Referencja progu AC0 (wewnętrznie, bez wyjścia na pin) \\
+        TCA0 & Split Mode, 8-bit PWM & Generacja burstu \SI{40}{\kilo\hertz} (WO5 na PA5, prescaler DIV1) \\
+        TCB0 & 16-bit, Capture & Pomiar $t_{ToF}$ \\
+        AC0 & Komp.\ analogowy & Detekcja progu echa (wyzw.\ TCB0 przez Event System) \\
+        USART0 & --- & Transmisja wyniku \\
+        $I_{DD}$ active & ${\sim}\SI{10}{\milli\ampere}$ & @ \SI{20}{\mega\hertz}, \SI{5}{\volt} (DS Tab.~36-4; nieużywany w~projekcie) \\
+        $I_{DD}$ active & ${\sim}\SI{3,1}{\milli\ampere}$ & @ \SI{10}{\mega\hertz}, \SI{3,3}{\volt} (DS Tab.~36-4: typ.\ 3{,}1\,mA @ 3V/10MHz) \\
+        $I_{DD}$ Standby & ${\sim}\SI{0,7}{\micro\ampere}$ & Z~RTC na OSCULP32K (wakeup periodyczny) \\
+        $I_{DD}$ Power-Down & \SI{0,1}{\micro\ampere} & Wszystkie peryferia wył.\ (brak period.\ wakeup) \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+\subsubsection{Przyporządkowanie pinów}
+
+\begin{table}[H]
+    \centering
+    \caption{Mapa pinów ATtiny1616 w~projekcie}
+    \label{tab:pinout}
+    \begin{tabular}{llll}
+        \toprule
+        \textbf{Pin} & \textbf{Funkcja} & \textbf{Peryferiał} & \textbf{Opis} \\
+        \midrule
+        PA0 & UPDI & --- & Programowanie \\
+        PA1 & TXD & USART0 & Transmisja wyników \\
+        PA2 & RXD & USART0 & (rezerwowy) \\
+        PA3 & EXTCLK & --- & (nieużywany) \\
+        PA4 & --- & --- & (nieużywany, rezerwowy GPIO) \\
+        PA5 & Burst TX & TCA0-WO5 & PWM \SI{40}{\kilo\hertz} (Split Mode, HCMP2) \\
+        PA6 & --- & --- & (nieużywany, rezerwowy GPIO; DAC0 wewnętrznie dla AC0) \\
+        PA7 & Przycisk & GPIO (pull-up) & Start pomiaru \\
+        PB0 & ECHO\_IN & ADC0-AIN11 & Sygnał echa (pomiar fazowy) \\
+        PB1 & TEMP & ADC0-AIN10 & Termistor NTC \\
+        PB4 & ECHO\_DET & AC0-AINP3 & Wejście komparatora (detekcja progu echa) \\
+        PB5 & BAZA\_TX & GPIO output & Sterowanie BC817 (backup / push-pull) \\
+        PC0 & LED & GPIO output & Sygnalizacja \\
+        PC1 & --- & --- & (nieużywany, rezerwowy GPIO) \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\subsubsection{Konfiguracja timera TCA0 --- generacja burstu 40 kHz}
+
+Wyjście WO5 na pinie PA5 (Tab.~5-1 datasheet) jest dostępne \textbf{wyłącznie
+w~trybie Split Mode} timera TCA0 (bit SPLITM = 1 w~rejestrze TCA0.CTRLD).
+W~trybie Normal Mode TCA0 udostępnia jedynie trzy wyjścia: WO0, WO1, WO2
+(sterowane rejestrami CMP0--CMP2); kanały WO3--WO5 nie istnieją, co potwierdza
+rejestr PORTMUX.CTRLC: ,,TCA05 --- Not applicable when TCA in Normal mode''
+(DS, sekcja~17.3.5).
+
+W~trybie Split Mode 16-bitowy licznik TCA0 dzieli się na dwa niezależne
+8-bitowe timery: niski (LCNT, $\text{TOP} = \text{LPER}$, wyjścia WO0--WO2)
+oraz wysoki (HCNT, $\text{TOP} = \text{HPER}$, wyjścia WO3--WO5).
+Do generacji sygnału \SI{40}{\kilo\hertz} na PA5 wykorzystano wysoki timer
+z~kanałem porównania HCMP2 $\to$ WO5.
+
+Częstotliwość wyjściowa w~trybie Split Mode (Single-Slope PWM):
+\begin{equation}
+    f_{PWM} = \frac{f_{CLK}}{N \cdot (HPER + 1)}
+    \label{eq:pwm_freq}
+\end{equation}
+
+Dla $f_{PWM} = \SI{40}{\kilo\hertz}$, $f_{CLK} = \SI{10}{\mega\hertz}$,
+prescaler $N = 1$ (DIV1):
+\begin{equation}
+    HPER = \frac{f_{CLK}}{N \cdot f_{PWM}} - 1 = \frac{10\,000\,000}{1 \cdot 40\,000} - 1 = 249
+    \label{eq:per_value}
+\end{equation}
+
+Wartość $HPER = 249$ mieści się w~zakresie 8-bitowym ($0$--$255$)
+\textbf{bez konieczności stosowania prescalera} --- jest to istotna
+przewaga pracy z~zegarem \SI{10}{\mega\hertz} nad \SI{20}{\mega\hertz}
+(gdzie $HPER = 499$ wymagałby prescalera DIV2).
+
+Częstotliwość wynikowa:
+$f_{PWM} = 10\,\text{MHz} / (1 \cdot 250) = \SI{40,0}{\kilo\hertz}$ --- dokładnie
+wymagana wartość.
+
+Wartość porównania dla 50\% wypełnienia: $HCMP2 = HPER/2 = 124$.
+
+Konfiguracja rejestrów:
+\begin{itemize}[nosep]
+    \item \texttt{TCA0.CTRLD = TCA\_SPLIT\_SPLITM\_bm} --- włączenie Split Mode
+    \item \texttt{TCA0.SPLIT.CTRLA = TCA\_SPLIT\_CLKSEL\_DIV1\_gc | TCA\_SPLIT\_ENABLE\_bm}
+    \item \texttt{TCA0.SPLIT.CTRLB = TCA\_SPLIT\_HCMP2EN\_bm} --- włączenie WO5
+    \item \texttt{TCA0.SPLIT.HPER = 249} --- TOP wysokiego timera
+    \item \texttt{TCA0.SPLIT.HCMP2 = 124} --- 50\% duty cycle
+\end{itemize}
+
+Mikrokontroler włącza timer na czas $N_{burst} = 8$ cykli
+($8/40000 = \SI{0,2}{\milli\second}$), następnie wyłącza wyjście PWM
+i~oczekuje na echo.
+
+\subsubsection{Konfiguracja TCB0 --- pomiar Time-of-Flight}
+
+Timer TCB0 pracuje w~trybie Input Capture on Event. Ścieżka detekcji
+echa jest w~pełni sprzętowa i~nie obciąża CPU:
+
+\begin{enumerate}[nosep]
+    \item Sygnał echa po wzmocnieniu w~torze MCP6002 trafia
+          na pin PB4 (AC0, wejście pozytywne AINP3 --- patrz Tab.~5-1 datasheet).
+    \item Komparator AC0 porównuje sygnał z~progiem ustawionym przez
+          wewnętrzny DAC0 (MUXNEG = DAC, 8-bit, zakres 0--$V_{REF}$).
+          Histereza typ.\ $\pm\SI{30}{\milli\volt}$ (HYSMODE = 0x2,
+          zakres \SIrange{10}{90}{\milli\volt}, DS Tab.~36-32) zabezpiecza
+          przed wielokrotnym wyzwoleniem; tryb normalny (LPMODE = 0,
+          $t_{PD} \approx \SI{50}{\nano\second}$ przy $V_{DD} \geq \SI{2,7}{\volt}$,
+          DS Tab.~36-32).
+    \item Wyjście AC0 generuje zdarzenie w~EVSYS, które
+          wyzwala Input Capture w~TCB0 --- zatrzaśnięcie wartości licznika
+          w~rejestrze CCMP. Konfiguracja EVSYS (DS, sekcja~14.5):
+          \begin{itemize}[nosep]
+              \item \texttt{EVSYS.ASYNCCH0 = EVSYS\_ASYNCCH0\_AC0\_OUT\_gc}
+                    --- AC0 jako źródło kanału asynchronicznego~0
+              \item \texttt{EVSYS.ASYNCUSER0 = EVSYS\_ASYNCUSER0\_ASYNCCH0\_gc}
+                    --- TCB0 (user~0) nasłuchuje kanału asynchronicznego~0
+          \end{itemize}
+\end{enumerate}
+
+Zdarzenie startowe (początek burstu TX) jest realizowane przez programowe
+wyzerowanie licznika TCB0 (zapis TCB0.CNT = 0) w~momencie uruchomienia
+TCA0. DAC0 pracuje wyłącznie wewnętrznie (połączenie z~AC0 przez
+MUXNEG = DAC) --- nie wymaga wyprowadzenia na pin PA6, który pozostaje
+wolny jako rezerwowy GPIO.
+
+Przy zegarze \SI{10}{\mega\hertz} i~16-bitowym liczniku:
+\begin{equation}
+    t_{max} = \frac{2^{16}}{f_{CLK}} = \frac{65536}{10 \times 10^6} = \SI{6,55}{\milli\second}
+    \label{eq:tcb_max}
+\end{equation}
+
+Co odpowiada maksymalnej odległości $D_{max} = v \cdot t_{max} / 2 \approx
+\SI{112}{\centi\metre}$ --- ponad dwukrotnie powyżej wymaganego zakresu \SI{50}{\centi\metre}.
+
+
+% ══════════════════════════════════════════════════════════════
+% SEKCJA 4: PROJEKT PCB
+% ══════════════════════════════════════════════════════════════
+\section{Projekt płytki drukowanej (PCB)}
+\label{sec:pcb}
+
+% ── PCB LAYOUT ──
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{pcb_top.png}
+    \caption{Layout PCB --- widok z~góry (warstwa TOP)}
+    \label{fig:pcb_top}
+\end{figure}
+
+Płytka drukowana zaprojektowana została w~programie EAGLE (Autodesk) jako
+dwustronna (2-layer) o~wymiarach ${\sim}49 \times 36$~\si{\milli\metre}.
+
+\subsection{Założenia projektowe PCB}
+
+\begin{enumerate}[nosep]
+    \item \textbf{Separacja analogowa/cyfrowa} --- sekcja wzmacniacza (MCP6002)
+          umieszczona w~lewej części płytki, mikrokontroler w~prawej, z~minimalną
+          liczbą skrzyżowań tras sygnałowych.
+    \item \textbf{Ground plane} --- warstwa BOTTOM wykorzystana jako ciągła
+          warstwa masy (ground plane), zapewniająca niską impedancję powrotną
+          dla sygnałów analogowych i~redukcję sprzężeń EMI.
+    \item \textbf{Kondensatory odsprzęgające} --- C1 (\SI{100}{\nano\farad})
+          umieszczony bezpośrednio przy pinach VDD/GND ATtiny1616 (odległość
+          $< \SI{3}{\milli\metre}$); C8 (\SI{100}{\nano\farad}) przy MCP6002.
+    \item \textbf{Ścieżki sygnałowe} --- sygnał echa (ECHO) prowadzony
+          możliwie krótką trasą od headera ODBIORNIK(RX) do wejścia MCP6002,
+          następnie do pinu ADC mikrokontrolera.
+    \item \textbf{Punkty testowe} --- TEST\_POINT\_ECHO i~TEST\_POINT\_VG
+          (goldpiny 1x1) umożliwiają podłączenie oscyloskopu w~fazie debugowania.
+    \item \textbf{Otwory montażowe} --- cztery otwory $\varnothing\SI{3,2}{\milli\metre}$
+          w~narożnikach płytki umożliwiają mocowanie do obudowy lub podstawki.
+\end{enumerate}
+
+\subsection{Klasy tras i~reguły DRC}
+
+\begin{table}[H]
+    \centering
+    \caption{Parametry ścieżek PCB}
+    \label{tab:pcb_rules}
+    \begin{tabular}{lr}
+        \toprule
+        \textbf{Parametr} & \textbf{Wartość} \\
+        \midrule
+        Szerokość ścieżki sygnałowej & \SI{0,254}{\milli\metre} (10\,mil) \\
+        Szerokość ścieżki zasilania & \SI{0,508}{\milli\metre} (20\,mil) \\
+        Prześwit minimalny & \SI{0,2}{\milli\metre} (8\,mil) \\
+        Via drill & \SI{0,3}{\milli\metre} \\
+        Via annular ring & \SI{0,15}{\milli\metre} \\
+        Warstwa miedzi & \SI{35}{\micro\metre} (1\,oz) \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+
+% ══════════════════════════════════════════════════════════════
+% SEKCJA 5: ALGORYTM OPROGRAMOWANIA
+% ══════════════════════════════════════════════════════════════
+\clearpage
+\section{Algorytm oprogramowania}
+\label{sec:algorytm}
+
+\subsection{Architektura oprogramowania}
+
+Program mikrokontrolera został zaprojektowany w~języku C (AVR-GCC) z~podziałem
+na moduły:
+
+\begin{table}[H]
+    \centering
+    \caption{Moduły oprogramowania}
+    \label{tab:moduly_sw}
+    \begin{tabular}{lll}
+        \toprule
+        \textbf{Moduł} & \textbf{Plik} & \textbf{Funkcja} \\
+        \midrule
+        main & \texttt{main.c} & Pętla główna, inicjalizacja \\
+        us\_driver & \texttt{us\_driver.c/h} & Generacja burstu, detekcja echa \\
+        phase\_meas & \texttt{phase\_meas.c/h} & Algorytm Goertzela, obliczenie fazy \\
+        temp\_comp & \texttt{temp\_comp.c/h} & Odczyt NTC, kompensacja $v(T)$ \\
+        filter & \texttt{filter.c/h} & Filtr medianowy, uśrednianie \\
+        uart & \texttt{uart.c/h} & Komunikacja USART \\
+        power & \texttt{power.c/h} & Zarządzanie trybami uśpienia \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\subsection{Diagram przepływu}
+
+\noindent Poniższy diagram przedstawia pełny cykl pomiarowy --- od inicjalizacji,
+przez akwizycję i~przetwarzanie sygnału, po transmisję wyniku i~uśpienie mikrokontrolera.
+
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[
+        node distance=0.6cm,
+        startstop/.style={rectangle, rounded corners, draw, fill=NavyBlue!15,
+                          text width=4.5cm, align=center, minimum height=0.55cm, font=\footnotesize},
+        process/.style={rectangle, draw, fill=white,
+                        text width=4.8cm, align=center, minimum height=0.55cm, font=\footnotesize},
+        decision/.style={diamond, draw, fill=orange!15,
+                         text width=2.2cm, align=center, aspect=2.2, font=\footnotesize},
+        io/.style={trapezium, draw, fill=Maroon!10, trapezium left angle=70,
+                   trapezium right angle=110, text width=3.5cm, align=center,
+                   minimum height=0.55cm, font=\footnotesize},
+        arrow/.style={->, >=Stealth, semithick}
+    ]
+        \node[startstop] (init) {Inicjalizacja CLK, TCA0,\\TCB0, ADC0, USART};
+        \node[process, below=of init] (temp) {Odczyt NTC (ADC, 4$\times$ oversample)\\$T \to v(T)$};
+        \node[process, below=of temp] (burst) {TCA0: Nadaj burst\\$N=8$ cykli @ 40\,kHz};
+        \node[process, below=of burst] (tof) {TCB0: Czekaj na echo\\$t_{ToF} \to D_{coarse}$};
+        \node[decision, below=0.8cm of tof] (echo_ok) {Echo\\wykryte?};
+        \node[process, right=1.5cm of echo_ok, font=\footnotesize] (err) {Błąd: brak echa};
+        \node[process, below=0.8cm of echo_ok] (adc_win) {Otwórz okno pomiarowe\\ADC: $K$ próbek echa};
+        \node[process, below=of adc_win] (goertzel) {Algorytm Goertzela $\to \varphi$};
+        \node[process, below=of goertzel] (fusion) {Fuzja: $D = n \cdot \lambda/2 + D_{fine}$};
+        \node[decision, below=0.8cm of fusion] (med_ok) {Zebrano\\$M$ pomiarów?};
+        \node[process, below=0.8cm of med_ok] (filter) {Filtr medianowy $\to D_{filtered}$};
+        \node[io, below=of filter] (uart) {USART TX: ,,D=XXX.X mm''};
+        \node[startstop, below=of uart] (sleep) {STANDBY SLEEP\\RTC wakeup $\to T_{cycle}$};
+
+        \draw[arrow] (init) -- (temp);
+        \draw[arrow] (temp) -- (burst);
+        \draw[arrow] (burst) -- (tof);
+        \draw[arrow] (tof) -- (echo_ok);
+        \draw[arrow] (echo_ok) -- node[right, font=\scriptsize] {TAK} (adc_win);
+        \draw[arrow] (echo_ok) -- node[above, font=\scriptsize] {NIE} (err);
+        \draw[arrow] (err.south) |- (sleep.east);
+        \draw[arrow] (adc_win) -- (goertzel);
+        \draw[arrow] (goertzel) -- (fusion);
+        \draw[arrow] (fusion) -- (med_ok);
+        \draw[arrow] (med_ok) -- node[right, font=\scriptsize] {TAK ($M=7$)} (filter);
+        \draw[arrow] (med_ok.west) -- ++(-2,0) |- node[left, pos=0.25, font=\scriptsize] {NIE} (temp.west);
+        \draw[arrow] (filter) -- (uart);
+        \draw[arrow] (uart) -- (sleep);
+        \draw[arrow] (sleep.west) -- ++(-2.8,0) |- (temp.west);
+    \end{tikzpicture}
+    \caption{Diagram przepływu programu mikrokontrolera. Każdy wynik końcowy
+    jest medianą z~$M = 7$ pomiarów jednostkowych.}
+    \label{fig:flowchart}
+\end{figure}
+
+\subsection{Algorytm Goertzela --- wyznaczanie fazy sygnału echa}
+\label{sec:goertzel}
+
+Do wyznaczenia fazy sygnału echa przy częstotliwości $f_0 = \SI{40}{\kilo\hertz}$
+zastosowano \textbf{algorytm Goertzela} --- wydajną obliczeniowo wariant DFT
+dla pojedynczej częstotliwości. W~porównaniu z~pełnym FFT, algorytm Goertzela
+wymaga jedynie $O(N)$ operacji mnożenia i~dodawania oraz minimalnej ilości
+pamięci (${\sim}3$ zmienne stanu), co czyni go idealnym dla ATtiny1616.
+
+\subsubsection{Podstawy matematyczne}
+
+Algorytm oblicza składową Fouriera sygnału $x[n]$ przy znormalizowanej
+częstotliwości $k = N \cdot f_0 / f_s$, gdzie $N$ to liczba próbek,
+$f_s$ to częstotliwość próbkowania.
+
+Rekurencja Goertzela:
+\begin{equation}
+    s[n] = x[n] + 2\cos\!\left(\frac{2\pi k}{N}\right) \cdot s[n-1] - s[n-2]
+    \label{eq:goertzel_recur}
+\end{equation}
+
+z~warunkami początkowymi $s[-1] = s[-2] = 0$.
+
+Po przetworzeniu wszystkich $N$ próbek, składowa zespolona:
+\begin{equation}
+    X[k] = s[N-1] - e^{-j2\pi k/N} \cdot s[N-2]
+    \label{eq:goertzel_result}
+\end{equation}
+
+Faza sygnału:
+\begin{equation}
+    \varphi = \arctan\!\left(\frac{\text{Im}(X[k])}{\text{Re}(X[k])}\right)
+    = \text{atan2}\!\left(\text{Im}(X[k]),\, \text{Re}(X[k])\right)
+    \label{eq:goertzel_phase}
+\end{equation}
+
+gdzie:
+\begin{align}
+    \text{Re}(X[k]) &= s[N-1] - s[N-2] \cdot \cos(2\pi k / N) \label{eq:re} \\
+    \text{Im}(X[k]) &= s[N-2] \cdot \sin(2\pi k / N) \label{eq:im}
+\end{align}
+
+\subsubsection{Parametry implementacji}
+
+\begin{table}[H]
+    \centering
+    \caption{Parametry algorytmu Goertzela w~projekcie}
+    \label{tab:goertzel_params}
+    \begin{tabular}{lrl}
+        \toprule
+        \textbf{Parametr} & \textbf{Wartość} & \textbf{Uzasadnienie} \\
+        \midrule
+        $f_s$ & \SI{160}{\kilo\hertz} & $4 \times f_0$, zapas Nyquist \\
+        $N$ & 16 & 4 pełne cykle @ $f_0$ \\
+        $k$ & 4 & $N \cdot f_0/f_s = 16 \cdot 40/160$ \\
+        $\cos(2\pi k/N)$ & $\cos(\pi/2) = 0$ & Uproszczenie! \\
+        Czas obliczeń & ${\sim}\SI{50}{\micro\second}$ & 16-bit arytmetyka stałoprzecinkowa \\
+        Zużycie RAM & ${\sim}\SI{20}{\byte}$ & 3 zmienne int32 + bufor \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\textbf{Kluczowa optymalizacja:} Dla $k = 4$ i~$N = 16$ współczynnik
+$\cos(2\pi k/N) = \cos(\pi/2) = 0$, co redukuje rekurencję Goertzela do:
+\begin{equation}
+    s[n] = x[n] - s[n-2]
+    \label{eq:goertzel_simplified}
+\end{equation}
+
+\textit{Eliminuje to mnożenie z~pętli rekurencyjnej}, pozostawiając jedynie
+odejmowanie i~dodawanie --- idealnie nadające się dla mikrokontrolera bez
+sprzętowego mnożnika zmiennoprzecinkowego.
+
+\subsubsection{Pseudokod}
+
+\begin{lstlisting}[caption={Algorytm Goertzela --- uproszczony dla $k=4$, $N=16$},
+                   label={lst:goertzel}]
+// Probkowanie ADC w oknie pomiarowym (ISR ADC)
+int16_t samples[16];  // 16 probek @ 160 kHz
+
+// Algorytm Goertzela (k=4, N=16 => cos(2*pi*k/N) = 0)
+int32_t s0 = 0, s1 = 0, s2 = 0;
+for (uint8_t n = 0; n < 16; n++) {
+    s0 = (int32_t)samples[n] - s2;  // cos=0 eliminuje mnozenie!
+    s2 = s1;
+    s1 = s0;
+}
+
+// Skladowe Re i Im (sin(pi/2) = 1, cos(pi/2) = 0)
+int32_t re = s1;       // s[N-1] - s[N-2]*cos = s[N-1]
+int32_t im = s2;       // s[N-2]*sin = s[N-2]
+
+// Faza (atan2 w arytmetyce staloprzecinkowej)
+int16_t phase_deg = atan2_fixed(im, re);  // wynik w 0.1 stopnia
+
+// Odleglosc fine
+int32_t d_fine_um = (int32_t)phase_deg * lambda_half_um / 3600;
+\end{lstlisting}
+
+\textbf{Implementacja \texttt{atan2\_fixed()}:} Funkcja arcus tangens
+w~arytmetyce stałoprzecinkowej. Planowane są dwa warianty do przetestowania
+w~Etapie~2:
+
+\begin{itemize}[nosep]
+    \item \textbf{LUT:} tablica 256 wpisów $\times$ \SI{1}{\byte}
+          = \SI{256}{\byte} Flash, z~interpolacją liniową między wpisami.
+          Dokładność $< \SI{0,5}{\degree}$ ($\SI{8,7}{\milli\radian}$),
+          co przy $\lambda/2 = \SI{4,29}{\milli\metre}$ odpowiada błędowi
+          odległości $< \SI{0,006}{\milli\metre}$ --- pomijalny wobec
+          pozostałych źródeł niepewności. Czas: ${\sim}\SI{10}{\micro\second}$.
+    \item \textbf{CORDIC:} 16 iteracji, brak tablicy LUT, dokładność
+          ${\sim}0{,}005^{\circ}$. Czas: ${\sim}\SI{30}{\micro\second}$.
+          Kosztem dłuższego obliczenia eliminuje zużycie Flash na tablicę.
+\end{itemize}
+
+Oba warianty mieszczą się w~budżecie Flash (\SI{16}{\kilo\byte}) i~nie wpływają
+istotnie na czas cyklu pomiarowego ($t_{active} = \SI{5}{\milli\second}$).
+
+\subsection{Filtracja wyników --- filtr medianowy}
+\label{sec:filtr}
+
+W~celu redukcji szumu pomiarowego i~eliminacji wartości odstających (outliers
+spowodowanych np.\ odbiciami wielokrotnymi) zastosowano filtr medianowy
+z~oknem $M = 7$ pomiarów.
+
+Filtr medianowy jest odporny na impulsowe zakłócenia (w~odróżnieniu od średniej
+arytmetycznej) i~nie wymaga znajomości rozkładu szumu. Algorytm sortowania
+dla $M = 7$ realizowany jest metodą sieci sortujących (sorting network) o~stałej
+liczbie porównań $C = 16$ i~zamian $S \leq 16$, co zajmuje ${\sim}\SI{15}{\micro\second}$.
+
+Po filtracji medianowej stosowana jest opcjonalna \textbf{wykładnicza średnia
+krocząca} (EMA) z~parametrem $\alpha = 0{,}3$:
+\begin{equation}
+    D_{EMA}[k] = \alpha \cdot D_{median}[k] + (1-\alpha) \cdot D_{EMA}[k-1]
+    \label{eq:ema}
+\end{equation}
+
+co wygładza wynik przy zachowaniu szybkiej reakcji na zmiany odległości.
+
+\subsection{Procedura kalibracji}
+\label{sec:kalibracja}
+
+Przed pierwszym użyciem urządzenie wykonuje jednorazową procedurę kalibracyjną
+mającą na celu kompensację systematycznych błędów:
+
+\begin{enumerate}[nosep]
+    \item \textbf{Kalibracja offsetu ToF} --- pomiar przy znanej odległości
+          referencyjnej (np.\ \SI{20}{\centi\metre}), wyznaczenie offsetu
+          $t_{offset}$ wynikającego z~opóźnień elektroniki i~ring-downu nadajnika.
+    \item \textbf{Kalibracja fazy} --- pomiar przy dwóch znanych odległościach
+          różniących się o~$\lambda/2$, weryfikacja liniowości pomiaru fazowego.
+    \item \textbf{Współczynnik korekcji wzmocnienia} --- opcjonalne dopasowanie
+          krzywej $D_{measured} = a \cdot D_{raw} + b$ metodą najmniejszych
+          kwadratów dla 3--5 punktów referencyjnych.
+\end{enumerate}
+
+Parametry kalibracyjne zapisywane są w~pamięci EEPROM ATtiny1616
+(\SI{256}{\byte} dostępne). Szacowane zużycie pamięci EEPROM:
+
+\begin{table}[H]
+    \centering
+    \caption{Szacowane wykorzystanie EEPROM na dane kalibracyjne}
+    \label{tab:eeprom_usage}
+    \begin{tabular}{lrl}
+        \toprule
+        \textbf{Parametr} & \textbf{Rozmiar} & \textbf{Typ danych} \\
+        \midrule
+        Offset ToF ($t_{offset}$) & 4\,B & \texttt{int32\_t} ($\si{\micro\second}$) \\
+        Współczynniki korekcji $a$, $b$ & 8\,B & 2 $\times$ \texttt{int32\_t} (Q16.16) \\
+        Temperatura referencyjna $T_0$ & 2\,B & \texttt{int16\_t} ($0{,}1\,^\circ$C) \\
+        LUT wielopunktowa (10~pkt) & 40\,B & 10 $\times$ 4\,B \\
+        CRC16 kontrolna & 2\,B & \texttt{uint16\_t} \\
+        \midrule
+        \textbf{Łącznie} & \textbf{56\,B} & z~256\,B dostępnych (\SI{22}{\percent}) \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\subsection{Komunikacja USART}
+\label{sec:usart}
+
+Wynik pomiaru transmitowany jest przez USART0 (pin PA1/TXD) w~formacie ASCII:
+
+\begin{lstlisting}[caption={Format ramki wyjściowej USART}, label={lst:uart_frame}]
+// Format: "D=XXX.X mm\r\n"
+// Przyklad: "D=234.7 mm\r\n"
+// Baudrate: 9600 bps (8N1)
+// Odczyt: dowolny terminal szeregowy (PuTTY, screen, minicom)
+// Podlaczenie: UPDI header pin 1 (TX) + GND
+\end{lstlisting}
+
+Transmisja jednej ramki (${\sim}16$ znaków @ 9600\,bps) trwa ${\sim}\SI{17}{\milli\second}$.
+W~trybie oszczędnym USART jest wyłączany między transmisjami.
+
+
+% ══════════════════════════════════════════════════════════════
+% SEKCJA 6: BUDŻET KOSZTÓW
+% ══════════════════════════════════════════════════════════════
+\section{Budżet kosztów}
+\label{sec:koszty}
+
+\begin{table}[H]
+    \centering
+    \caption{Koszt elementów urządzenia (wg regulaminu i~cen brutto sklepów)}
+    \label{tab:koszty}
+    \begin{tabular}{llrrrl}
+        \toprule
+        \textbf{Element} & \textbf{Ozn.} & \textbf{Ilość} &
+        \textbf{Cena/szt.} & \textbf{Suma} & \textbf{Źródło} \\
+        \midrule
+        \multicolumn{6}{l}{\textit{Elementy R, L, C, tranzystory i~diody małej mocy --- \SI{0,15}{PLN}/szt.\ (regulamin):}} \\
+        \midrule
+        Rezystory 0603 & R1--R10, R\_LED & 11 & 0,15 & 1,65 & regulamin \\
+        Kondensatory 0603 & C1--C8 & 8 & 0,15 & 1,20 & regulamin \\
+        Cewka \SI{10}{\micro\henry} & L1 & 1 & 0,15 & 0,15 & regulamin (filtr EMI zasilania) \\
+        BC817-40 (NPN) & BC817 & 1 & 0,15 & 0,15 & regulamin \\
+        LED czerwona & LED & 1 & 0,15 & 0,15 & regulamin \\
+        \midrule
+        \multicolumn{6}{l}{\textit{Wzmacniacze operacyjne --- \SI{1,00}{PLN}/szt.\ (regulamin):}} \\
+        \midrule
+        MCP6002-I/SN & MCP6002 & 1 & 1,00 & 1,00 & regulamin \\
+        \midrule
+        \multicolumn{6}{l}{\textit{PCB --- cena regulaminowa:}} \\
+        \midrule
+        Płytka drukowana & PCB & 1 & 15,00 & 15,00 & regulamin \\
+        \midrule
+        \multicolumn{6}{l}{\textit{Pozostałe elementy --- ceny brutto sklepów na terenie UE:}} \\
+        \midrule
+        ATtiny1616-SN & U1 & 1 & 8,50 & 8,50 &
+            \href{https://www.tme.eu/pl/details/attiny1616-snr/mikrokontrolery-microchip-avr-8-bit/microchip-technology/}{TME} \\
+        MCP1700T-3302E/TT & U2 & 1 & 1,63 & 1,63 &
+            \href{https://www.tme.eu/pl/details/mcp1700t-3302e_tt/stabilizatory-ldo-nienastawne/microchip-technology/}{TME} \\
+        Przycisk 1825910-6 & SW1 & 1 & 0,98 & 0,98 &
+            \href{https://www.tme.eu/pl/details/1825910-6/przelaczniki-tact/te-connectivity/}{TME} \\
+        Goldpiny 1x02 & --- & 4 & 0,30 & 1,20 &
+            \href{https://www.tme.eu/pl/}{TME} \\
+        Goldpiny 1x03 & UPDI & 1 & 0,35 & 0,35 &
+            \href{https://www.tme.eu/pl/}{TME} \\
+        Goldpiny 1x01 & TP & 2 & 0,15 & 0,30 &
+            \href{https://www.tme.eu/pl/}{TME} \\
+        Nadajnik US 40\,kHz & TX & 1 & 3,50 & 3,50 &
+            \href{https://www.tme.eu/pl/}{TME} \\
+        Odbiornik US 40\,kHz & RX & 1 & 3,50 & 3,50 &
+            \href{https://www.tme.eu/pl/}{TME} \\
+        Termistor NTC 10\,k$\Omega$ & NTC & 1 & 0,90 & 0,90 &
+            \href{https://www.tme.eu/pl/}{TME} \\
+        \midrule
+        \multicolumn{4}{r}{\textbf{RAZEM (koszt brutto):}} & \textbf{40,16} & PLN \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+Punkty za cenę elementów:
+\begin{equation}
+    P_{cena} = \min\!\left(50,\; \frac{50 \times 50}{40{,}16}\right)
+    = \min(50;\; 62{,}3) = \textbf{50~pkt~(max)}
+    \label{eq:pkt_cena}
+\end{equation}
+
+
+% ══════════════════════════════════════════════════════════════
+% SEKCJA 7: BUDŻET MOCY
+% ══════════════════════════════════════════════════════════════
+\section{Budżet mocy}
+\label{sec:moc}
+
+\subsection{Prąd pobierany przez poszczególne elementy}
+
+\begin{table}[H]
+    \centering
+    \caption{Szczegółowy budżet prądowy (dane z~kart katalogowych)}
+    \label{tab:moc_detail}
+    \begin{tabular}{lrrrr}
+        \toprule
+        \textbf{Element} & \textbf{$I_{active}$} & \textbf{$I_{sleep}$}
+            & \textbf{$t_{active}$} & \textbf{Źródło danych} \\
+        \midrule
+        ATtiny1616 @ 10\,MHz, 3{,}3\,V
+            & ${\sim}\SI{3,1}{\milli\ampere}$
+            & \SI{0,7}{\micro\ampere}
+            & \SI{5}{\milli\second}
+            & DS Tab.~36-4 (typ.\ 3{,}1\,mA @ 3V/10MHz) \\
+        ATtiny1616 (Standby + RTC)
+            &
+            & \SI{0,7}{\micro\ampere}
+            &
+            & DS Tab.~36-5 (OSCULP32K, typ.) \\
+        MCP6002 (oba kanały)
+            & \SI{100}{\micro\ampere}
+            & \SI{100}{\micro\ampere}
+            & ciągły
+            & DS, Tab.~1.1 \\
+        MCP1700 ($I_q$)
+            & \SI{1,6}{\micro\ampere}
+            & \SI{1,6}{\micro\ampere}
+            & ciągły
+            & DS, Tab.~1 \\
+        Nadajnik US (burst)
+            & \SI{20}{\milli\ampere}
+            & \SI{0}{\micro\ampere}
+            & \SI{0,2}{\milli\second}
+            & estymacja; \textbf{zasilany z~5V} (nie przez LDO) \\
+        LED (puls)
+            & \SI{3,3}{\milli\ampere}
+            & \SI{0}{\micro\ampere}
+            & \SI{1}{\milli\second}
+            & $R_{LED} = \SI{1}{\kilo\ohm}$ \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\subsection{Scenariusze pracy}
+
+\subsubsection{Scenariusz 1: Ciągły pomiar (bez uśpienia)}
+
+Przy ciągłym działaniu wszystkich elementów (@ \SI{3,3}{\volt}):
+\begin{equation}
+    I_{avg,1} = 3{,}1 + 0{,}1 + 0{,}002 + 3{,}3 \cdot 0{,}2 \approx \SI{3,9}{\milli\ampere}
+\end{equation}
+
+\textbf{Uwaga:} Nadajnik US jest zasilany bezpośrednio z~\SI{5}{\volt}
+(kolektor BC817 podłączony do +5V, nie przez LDO). Prąd nadajnika
+(20\,mA burst, duty cycle ${\sim}4\%$) nie obciąża stabilizatora MCP1700.
+Średni prąd nadajnika z~5V: $20 \cdot 0{,}04 = \SI{0,8}{\milli\ampere}$.
+
+\begin{equation}
+    P_{in,1} = \frac{I_{avg,1} \cdot V_{3,3}}{\eta_{LDO}} + I_{TX,avg} \cdot V_{5V}
+    = \frac{3{,}9 \cdot 3{,}3}{0{,}66} + 0{,}8 \cdot 5 = 19{,}5 + 4{,}0 = \SI{23,5}{\milli\watt}, \quad
+    P_{pkt,1} = 100/23{,}5 \approx \textbf{4,3~pkt}
+\end{equation}
+
+\subsubsection{Scenariusz 2: Pomiar okresowy ze sleep mode (planowany)}
+
+Cykl pomiarowy: $T_{cycle} = \SI{100}{\milli\second}$, czas aktywny
+$t_{active} = \SI{5}{\milli\second}$ (burst + ToF + ADC + Goertzel + UART),
+czas uśpienia $t_{sleep} = \SI{95}{\milli\second}$ (tryb Standby z~RTC wakeup).
+
+Średni prąd mikrokontrolera (Standby z~RTC, $I_{standby} = \SI{0,7}{\micro\ampere}$):
+\begin{equation}
+    I_{MCU,avg} = \frac{t_{active} \cdot I_{active} + t_{sleep} \cdot I_{sleep}}{T_{cycle}}
+    = \frac{5 \cdot 3100 + 95 \cdot 0{,}7}{100} \approx \SI{156}{\micro\ampere}
+    \label{eq:imcu_avg}
+\end{equation}
+
+Średni prąd całkowity (@ \SI{3,3}{\volt}, bez nadajnika):
+\begin{equation}
+    I_{avg,2} = 156 + 100 + 1{,}6 + 3300 \cdot \frac{1}{100}
+    \approx \SI{291}{\micro\ampere}
+\end{equation}
+
+Prąd nadajnika z~5V (średni): $I_{TX,avg} = 20000 \cdot 0{,}2 / 100 = \SI{40}{\micro\ampere}$.
+
+Moc pobierana z~zasilania \SI{5}{\volt}:
+\begin{equation}
+    P_{in,2} = \frac{I_{avg,2} \cdot V_{3,3}}{\eta_{LDO}} + I_{TX,avg} \cdot V_{5V}
+    = \frac{0{,}291 \cdot 3{,}3}{0{,}66} + 0{,}040 \cdot 5
+    \approx 1{,}45 + 0{,}20 = \SI{1,7}{\milli\watt}, \quad
+    P_{pkt,2} = \min(50,\; 100/1{,}7) \approx \textbf{50~pkt~(max)}
+    \label{eq:moc_scen2}
+\end{equation}
+
+\subsubsection{Scenariusz 3: Agresywna optymalizacja (cel)}
+
+Dodatkowe optymalizacje planowane w~Etapie~2:
+\begin{itemize}[nosep]
+    \item Wyłączanie MCP6002 przez odcięcie zasilania pinem GPIO + P-MOSFET
+          ($I_{sleep,opamp} = \SI{0}{\micro\ampere}$)
+    \item Redukcja $T_{cycle}$ do \SI{200}{\milli\second} (pomiar co 5/s)
+    \item Taktowanie MCU na \SI{5}{\mega\hertz} w~fazie obliczeń
+          (prescaler $\div 4$, $I_{active} \approx \SI{1,8}{\milli\ampere}$, DS Tab.~36-4)
+    \item Wyłączanie LED (wynik tylko przez UART)
+\end{itemize}
+
+Szacowany średni prąd:
+\begin{equation}
+    I_{avg,3} \approx \SI{120}{\micro\ampere}, \quad
+    P_{in,3} \approx \SI{0,8}{\milli\watt}, \quad
+    P_{pkt,3} = \min(50, 100/0{,}8) \approx \textbf{50~pkt~(max)}
+    \label{eq:moc_scen3}
+\end{equation}
+
+\textit{Uwaga:} Wyłączanie MCP6002 przez P-MOSFET (np.\ BSS84, ${\sim}\SI{0,50}{PLN}$
+--- nieujęty w~BOM powyżej, do uwzględnienia w~Etapie~2) wymaga wydłużenia
+$t_{active}$ o~${\sim}\SI{2}{\milli\second}$ na czas stabilizacji wzmacniacza
+po włączeniu zasilania. Realistycznie $I_{avg,3} \approx \SIrange{120}{180}{\micro\ampere}$.
+
+
+% ══════════════════════════════════════════════════════════════
+% SEKCJA 8: ANALIZA BŁĘDÓW
+% ══════════════════════════════════════════════════════════════
+\section{Analiza błędów i~niepewność pomiaru}
+\label{sec:bledy}
+
+\subsection{Budżet niepewności}
+
+\begin{table}[H]
+    \centering
+    \caption{Szczegółowy budżet niepewności pomiaru @ $D = \SI{30}{\centi\metre}$, $T = \SI{20}{\celsius}$}
+    \label{tab:bledy}
+    \begin{tabularx}{\textwidth}{lrrX}
+        \toprule
+        \textbf{Źródło} & \textbf{$\sigma$ [\si{\milli\metre}]} & \textbf{Typ}
+            & \textbf{Kompensacja / redukcja} \\
+        \midrule
+        Szum ADC (10-bit, 1\,LSB)
+            & 0,10
+            & Losowy
+            & Oversampling $4\times$ ($\to \sigma/2$), Goertzel filtruje szum poza $f_0$ \\
+        Niepewność pomiaru fazy
+            & 0,15
+            & Losowy
+            & Uśrednianie z~$M=7$ pomiarów ($\to \sigma/\sqrt{7}$) \\
+        Kompensacja temperatury (resztkowa)
+            & 0,05
+            & Systematyczny
+            & Termistor NTC z~oversamplingiem ($\Delta T < \SI{0,1}{\kelvin}$) \\
+        Jitter zegara ($\pm\SI{2}{\percent}$ int.\ osc.)
+            & 0,12
+            & Losowy
+            & Kalibracja oscylatora, pomiar różnicowy \\
+        Kąt padania wiązki US
+            & 0,20
+            & Systematyczny
+            & Mechaniczne ustawienie, karton $20\times20$\,cm redukuje wrażliwość \\
+        Odbicia wielokrotne (multipath)
+            & 0,30
+            & Losowy
+            & Filtr medianowy eliminuje outliers, bramkowanie czasowe \\
+        Ring-down nadajnika (bliskie pole)
+            & 0,15
+            & Systematyczny
+            & Kalibracja offsetu ToF, $D_{min} = \SI{10}{\centi\metre}$ (\SI{0,6}{\milli\second} --- wystarczający czas wygaszenia) \\
+        Rozrzut $f_0$ przetworników
+            & 0,10
+            & Systematyczny
+            & Jednorazowa kalibracja, zapis w~EEPROM \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+\subsection{Szacowany RMSE}
+
+Zakładając nieskorelowanie poszczególnych źródeł błędu, sumaryczna
+niepewność standardowa (przed filtracją):
+\begin{equation}
+    \sigma_{total} = \sqrt{\sum_i \sigma_i^2}
+    = \sqrt{0{,}10^2 + 0{,}15^2 + 0{,}05^2 + 0{,}12^2 + 0{,}20^2 + 0{,}30^2 + 0{,}15^2 + 0{,}10^2}
+    \approx \SI{0,48}{\milli\metre}
+    \label{eq:sigma_total}
+\end{equation}
+
+Po filtracji medianowej ($M = 7$) i~EMA ($\alpha = 0{,}3$), efektywna
+redukcja szumu losowego o~czynnik ${\sim}2{,}5$:
+\begin{equation}
+    \boxed{RMSE_{est} \approx \SI{0,3}{\milli\metre} \text{ -- } \SI{0,8}{\milli\metre}}
+    \label{eq:rmse_final}
+\end{equation}
+
+Dolna granica (0,3\,mm) odpowiada idealnemu scenariuszowi z~dobrze
+skalibrowanym urządzeniem; górna (0,8\,mm) --- warunkom niekontrolowanym
+z~odbiciami. W~obu przypadkach wynik jest znacząco lepszy niż osiągalny
+metodą prostego ToF (${\sim}\SI{3}{\milli\metre}$).
+
+
+% ══════════════════════════════════════════════════════════════
+% SEKCJA 9: PODSUMOWANIE
+% ══════════════════════════════════════════════════════════════
+\section{Podsumowanie i~planowane optymalizacje}
+\label{sec:podsumowanie}
+
+\subsection{Szacowana punktacja}
+
+\begin{table}[H]
+    \centering
+    \caption{Podsumowanie szacowanej punktacji}
+    \label{tab:punktacja}
+    \begin{tabular}{lrrr}
+        \toprule
+        \textbf{Kryterium} & \textbf{Max} & \textbf{Pesymist.} & \textbf{Optymist.} \\
+        \midrule
+        Błąd RMSE         & 100 & 70  & 95 \\
+        Średni pobór mocy & 50  & 50  & 50 \\
+        Koszt elementów   & 50  & 50  & 50 \\
+        Jakość projektu   & 100 & 65  & 90 \\
+        \midrule
+        \textbf{RAZEM}    & \textbf{300} & \textbf{235} & \textbf{285} \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\subsection{Planowane optymalizacje na Etap 2}
+
+Na etapie budowy prototypu planowane są następujące działania optymalizacyjne:
+
+\begin{enumerate}[nosep]
+    \item \textbf{Weryfikacja toru analogowego} --- eksperymentalna weryfikacja
+          dobranych wartości C4 = \SI{47}{\pico\farad} i~C5 = \SI{33}{\pico\farad}
+          na prototypie; ewentualna korekta na podstawie pomiarów oscyloskopem
+          (patrz sekcja \ref{sec:tor_rx}). Cel: potwierdzenie $|A_{total}| \geq 10$.
+    \item \textbf{Agresywne zarządzanie mocą} --- wyłączanie MCP6002 przez
+          P-MOSFET, redukcja częstotliwości zegara MCU w~fazie obliczeń.
+          Cel: $P_{avg} < \SI{2}{\milli\watt}$.
+    \item \textbf{Kalibracja wielopunktowa} --- pomiary w~5--10 punktach
+          referencyjnych, dopasowanie krzywej korekcyjnej (wielomian 2.~stopnia
+          lub look-up table z~interpolacją liniową). Zapis w~EEPROM.
+    \item \textbf{Push-pull sterowanie nadajnika} --- wykorzystanie dwóch pinów
+          GPIO w~przeciwfazie (PA5 przez TCA0-WO5 w~Split Mode, prescaler DIV1
+          + PB5 sterowany
+          programowo w~przeciwfazie) do podwojenia amplitudy sygnału TX
+          (poprawa SNR o~\SI{6}{\deci\bel}). Wymaga modyfikacji schematu:
+          usunięcie BC817 i~bezpośrednie sterowanie nadajnika z~dwóch pinów MCU
+          (prąd wyjściowy GPIO: $I_{OH}/I_{OL} \leq \SI{20}{\milli\ampere}$,
+          DS Tab.~36-3 --- wystarczający dla typowego nadajnika US), co dodatkowo
+          redukuje koszt o~\SI{0,30}{PLN} (R9 + BC817).
+    \item \textbf{Automatyczna regulacja wzmocnienia (AGC)} --- wykorzystanie
+          wewnętrznego DAC0 ATtiny1616 jako programowalnego progu komparatora AC0
+          do dynamicznej regulacji detekcji echa w~zależności od zmierzonej
+          odległości. W~razie potrzeby DAC0 może zostać wyprowadzony na pin PA6
+          (OUTEN = 1, DS Tab.~31-2) w~celu sterowania offsetem toru analogowego.
+    \item \textbf{Projekt obudowy} --- druk 3D obudowy z~precyzyjnym mocowaniem
+          przetworników US (kąt, odstęp), minimalizujący wpływ geometrii na pomiar.
+\end{enumerate}
+
+\subsection{Wnioski}
+
+Zaprojektowany miernik odległości wykorzystuje hybrydową metodę Pulse-Phase
+Ranging, która łączy prostotę i~niski koszt ultradźwiękowego pomiaru ToF
+z~sub-milimetrową rozdzielczością pomiaru fazowego. Kluczowymi zaletami
+rozwiązania są:
+
+\begin{itemize}[nosep]
+    \item Teoretyczny RMSE poniżej \SI{1}{\milli\metre} dzięki algorytmowi Goertzela.
+    \item Koszt elementów ${\sim}\SI{40}{PLN}$ --- maksymalna punktacja (50\,pkt).
+    \item Potencjał redukcji poboru mocy do ${\sim}\SI{0,8}{\milli\watt}$ (50\,pkt).
+    \item Kompensacja temperatury eliminująca dominujące źródło błędu systematycznego.
+    \item Modułowa architektura oprogramowania ułatwiająca dalszą optymalizację.
+\end{itemize}
+
+Projekt demonstruje świadome podejmowanie decyzji inżynierskich na każdym
+etapie --- od wyboru metody pomiarowej, przez dobór komponentów i~topologię
+PCB, po algorytm przetwarzania sygnałów i~strategię zarządzania energią.
+Autor jest przekonany, że zaproponowane rozwiązanie stanowi solidną podstawę
+do budowy prototypu w~Etapie~2 konkursu.
+
+
+% ══════════════════════════════════════════════════════════════
+% BIBLIOGRAFIA
+% ══════════════════════════════════════════════════════════════
+\section*{Bibliografia}
+\addcontentsline{toc}{section}{Bibliografia}
+
+\begin{enumerate}[label={[\arabic*]}, nosep]
+    \item Microchip Technology Inc., \textit{ATtiny1614/1616/1617 Data Sheet},
+          DS40002204A, 2020. Dostępny:
+          \url{https://ww1.microchip.com/downloads/en/DeviceDoc/ATtiny1614-16-17-DataSheet-DS40002204A.pdf}
+    \item Microchip Technology Inc., \textit{MCP6001/1R/1U/2/4 --- 1 MHz, Low-Power
+          Op Amp}, DS20001733, 2022.
+    \item Microchip Technology Inc., \textit{MCP1700/1700T --- Low Quiescent Current
+          LDO Regulator}, DS20001826, 2018.
+    \item Nexperia, \textit{BC817 series --- 45 V, 500 mA NPN general-purpose transistors},
+          2023.
+    \item G.~Goertzel, ,,An Algorithm for the Evaluation of Finite Trigonometric Series'',
+          \textit{The American Mathematical Monthly}, vol.~65, no.~1, pp.~34--35, 1958.
+    \item A.~Carullo, M.~Parvis, ,,An ultrasonic sensor for distance measurement
+          in automotive applications'', \textit{IEEE Sensors Journal}, vol.~1, no.~2,
+          pp.~143--147, 2001.
+\end{enumerate}
+
+\end{document}

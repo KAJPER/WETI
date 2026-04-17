@@ -1,0 +1,75 @@
+* ============================================================
+* Tor RX - symulacja PRZEJSCIOWA (transient)
+* Odpowiedz na burst echa 40kHz z narastajaca obwiednia
+* ============================================================
+*
+* INSTRUKCJA:
+* 1. Zapisz jako "tor_rx_transient.cir"
+* 2. LTspice -> File -> Open -> tor_rx_transient.cir
+* 3. Run (zielony trojkat)
+* 4. Prawy klik na wykres -> Add Trace -> V(vout)
+*    Zobaczysz sygnal echa po wzmocnieniu
+* 5. Dodaj tez: V(echo_in) zeby porownac wejscie z wyjsciem
+* ============================================================
+
+* --- Model MCP6002 (GBW=1MHz, SR=0.6V/us) ---
+.subckt MCP6002 inp inn out vdd
+* Wejscie roznicowe
+Gin 0 mid inp inn 100k
+Rp mid 0 1
+Cp mid 0 {1/(2*3.14159*1e6/100e3)}
+* Ograniczenie wyjscia do rail-to-rail (0 do VDD)
+Eout buf 0 mid 0 1
+Dhi buf out Dclamp
+Dlo 0 out Dclamp
+Rout buf out 10
+.model Dclamp D(Is=1e-14)
+.ends MCP6002
+
+* === ZRODLO ECHA ===
+* Burst 8 cykli 40kHz, obwiednia narastajaca (symulacja echa US)
+* Opoznienie 0.6ms (symulacja ToF dla ~10cm)
+* Amplituda 10mVpp (typowe echo z przetwornika US)
+B_echo echo_in 0 V=10m * sin(2*3.14159*40000*(time-0.6m)) * 
++ (time>0.6m) * (time<0.8m) *
++ min(1, (time-0.6m)/0.05m) *
++ (1 - max(0, (time-0.75m)/0.05m))
+
+* === ZASILANIE ===
+Vdd vdd 0 3.3
+
+* === PROG DETEKCJI AC0 (do wizualizacji) ===
+* DAC0 ustawiony na ~15% VDD = 0.5V ponad VDD/2
+V_threshold threshold 0 {1.65+0.15}
+
+* ============================================================
+* STOPIEN 1
+* ============================================================
+C3 echo_in n_r5 10n
+R5 n_r5 inv1 10k
+R6 inv1 out1 470k
+C4 inv1 out1 47p
+R1a vdd vg1 100k
+R1b vg1 0 100k
+Cbias1 vg1 0 100n
+XU1 vg1 inv1 out1 vdd MCP6002
+
+* ============================================================
+* STOPIEN 2
+* ============================================================
+C2 out1 n_r2 1u
+R2 n_r2 inv2 100k
+R3 inv2 vout 470k
+C5 inv2 vout 33p
+R4 inv2 vout 1Meg
+R7a vdd vg2 100k
+R7b vg2 0 100k
+Cbias2 vg2 0 100n
+XU2 vg2 inv2 vout vdd MCP6002
+
+* ============================================================
+* SYMULACJA
+* ============================================================
+.tran 0 1.2m 0 500n
+.backanno
+.end

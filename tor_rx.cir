@@ -1,0 +1,104 @@
+* ============================================================
+* Tor analogowy RX - Bezkontaktowy miernik odleglosci
+* Pulse-Phase Ranging - Wygraj Indeks WETI 2026
+* ============================================================
+* Symulacja AC: Bode plot (amplituda + faza)
+* Symulacja TRAN: odpowiedz na burst 8 cykli 40kHz
+*
+* INSTRUKCJA:
+* 1. Zapisz ten plik jako "tor_rx.cir"
+* 2. LTspice -> File -> Open -> tor_rx.cir
+* 3. Kliknij Run (zielony trojkat) 
+* 4. Kliknij prawym na wykres -> Add Trace -> V(vout)
+*    Zobaczysz Bode plot (amplituda w dB + faza)
+* 5. Zeby zobaczyc tez wyjscie 1. stopnia: Add Trace -> V(out1)
+*
+* Zeby przelaczac miedzy AC a TRAN:
+*   - odkomentuj jedna z linii .ac / .tran na dole
+*     (usun ";" z poczatku linii, dodaj ";" do drugiej)
+* ============================================================
+
+* --- Prosty model op-ampa (MCP6002: GBW=1MHz, SR=0.6V/us) ---
+.subckt MCP6002 inp inn out
+* Wejscie roznicowe
+Gin 0 mid inp inn 100k
+Rp mid 0 1
+* Biegun dominujacy -> GBW = gm/(2*pi*C) = 100k/(2*pi*15.9n) ~= 1MHz
+Cp mid 0 {1/(2*3.14159*1e6/100e3)}
+* Bufor wyjsciowy
+Eout out 0 mid 0 1
+.ends MCP6002
+
+* === ZRODLO SYGNALU ===
+* AC: 10mV amplitude (typowe echo US po przetworniku)
+* TRAN: burst 8 cykli 40kHz, narastajaca obwiednia
+Vin in 0 AC 10m
+
+* === ZASILANIE ===
+Vdd vdd 0 3.3
+
+* ============================================================
+* STOPIEN 1: Wzmacniacz odwracajacy z filtrem pasmowym
+* Av(DC) = -R6/R5 = -470k/10k = -47
+* f_HP = 1/(2*pi*R5*C3) = 1.59 kHz
+* f_LP = 1/(2*pi*R6*C4) = 7.2 kHz  
+* |Av(40kHz)| ~ 8.3x
+* ============================================================
+
+* Kondensator sprzegajacy (gorno-przepustowy)
+C3 in n_r5 10n
+
+* Rezystor wejsciowy
+R5 n_r5 inv1 10k
+
+* Sprzezenie zwrotne: R6 rownolegle z C4
+R6 inv1 out1 470k
+C4 inv1 out1 47p
+
+* Polaryzacja VDD/2 = 1.65V
+R1a vdd vg1 100k
+R1b vg1 0 100k
+Cbias1 vg1 0 100n
+
+* Op-amp 1
+XU1 vg1 inv1 out1 MCP6002
+
+* ============================================================
+* STOPIEN 2: Wzmacniacz z filtrem dolnoprzepustowym
+* Av(DC) = -R3/R2 = -470k/100k = -4.7
+* f_LP = 1/(2*pi*R3*C5) = 10.3 kHz
+* |Av(40kHz)| ~ 1.2x
+* ============================================================
+
+* Kondensator sprzegajacy
+C2 out1 n_r2 1u
+
+* Rezystor wejsciowy
+R2 n_r2 inv2 100k
+
+* Sprzezenie zwrotne: R3 rownolegle z C5
+R3 inv2 vout 470k
+C5 inv2 vout 33p
+
+* Rezystor DC w sprzezeniu zwrotnym
+R4 inv2 vout 1Meg
+
+* Polaryzacja VDD/2
+R7a vdd vg2 100k
+R7b vg2 0 100k
+Cbias2 vg2 0 100n
+
+* Op-amp 2
+XU2 vg2 inv2 vout MCP6002
+
+* ============================================================
+* KOMENDY SYMULACJI
+* ============================================================
+* --- Bode plot (AKTYWNA) ---
+.ac dec 1000 10 10Meg
+
+* --- Odpowiedz przejsciowa (odkomentuj i zakomentuj .ac) ---
+;.tran 0 1m 0 100n
+
+.backanno
+.end

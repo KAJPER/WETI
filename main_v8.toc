@@ -1,0 +1,69 @@
+\babel@toc {polish}{}\relax 
+\contentsline {section}{\numberline {1}Wstęp}{5}{section.1}%
+\contentsline {subsection}{\numberline {1.1}Wymagania konkursowe}{5}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}Uzasadnienie wyboru metody pomiarowej}{5}{subsection.1.2}%
+\contentsline {section}{\numberline {2}Zasada działania metody Pulse-Phase Ranging}{6}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Przegląd metody}{6}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Faza 1 --- Pomiar gruby (Time-of-Flight)}{7}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}Faza 2 --- Pomiar dokładny (Phase Measurement)}{8}{subsection.2.3}%
+\contentsline {subsubsection}{\numberline {2.3.1}Weryfikacja spójności wyznaczania $n$ (consistency check)}{8}{subsubsection.2.3.1}%
+\contentsline {subsubsection}{\numberline {2.3.2}Rozdzielczość pomiaru fazowego}{9}{subsubsection.2.3.2}%
+\contentsline {subsection}{\numberline {2.4}Diagram czasowy cyklu pomiarowego}{10}{subsection.2.4}%
+\contentsline {subsection}{\numberline {2.5}Kompensacja temperatury}{10}{subsection.2.5}%
+\contentsline {subsubsection}{\numberline {2.5.1}Wyznaczanie temperatury z~termistora}{10}{subsubsection.2.5.1}%
+\contentsline {subsubsection}{\numberline {2.5.2}Dynamika pomiaru temperatury --- stała czasowa dzielnika NTC}{11}{subsubsection.2.5.2}%
+\contentsline {section}{\numberline {3}Schemat ideowy}{11}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Blok zasilania}{12}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Blok nadajnika (TX)}{12}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}Tor analogowy odbiornika (RX)}{13}{subsection.3.3}%
+\contentsline {subsubsection}{\numberline {3.3.1}Parametry MCP6002-I/SN}{13}{subsubsection.3.3.1}%
+\contentsline {subsubsection}{\numberline {3.3.2}Pierwszy stopień --- wzmacniacz odwracający z~filtrem pasmowym}{13}{subsubsection.3.3.2}%
+\contentsline {subsubsection}{\numberline {3.3.3}Drugi stopień --- wzmacniacz z~filtrem dolnoprzepustowym}{14}{subsubsection.3.3.3}%
+\contentsline {subsubsection}{\numberline {3.3.4}Całkowite wzmocnienie toru analogowego}{15}{subsubsection.3.3.4}%
+\contentsline {subsubsection}{\numberline {3.3.5}Wpływ tolerancji elementów na wzmocnienie i~fazę}{16}{subsubsection.3.3.5}%
+\contentsline {subsubsection}{\numberline {3.3.6}Uzasadnienie doboru C4/C5 --- kompromis GBW a~wymagania stabilności fazy}{16}{subsubsection.3.3.6}%
+\contentsline {subsubsection}{\numberline {3.3.7}Weryfikacja symulacyjna toru RX (LTspice)}{17}{subsubsection.3.3.7}%
+\contentsline {subsubsection}{\numberline {3.3.8}Symulacja odpowiedzi przejściowej (burst echa)}{18}{subsubsection.3.3.8}%
+\contentsline {subsubsection}{\numberline {3.3.9}Analiza stabilności toru wzmacniacza}{19}{subsubsection.3.3.9}%
+\contentsline {subsection}{\numberline {3.4}Mikrokontroler ATtiny1616}{20}{subsection.3.4}%
+\contentsline {subsubsection}{\numberline {3.4.1}Przyporządkowanie pinów}{21}{subsubsection.3.4.1}%
+\contentsline {subsubsection}{\numberline {3.4.2}Konfiguracja timera TCA0 --- generacja burstu 40 kHz}{22}{subsubsection.3.4.2}%
+\contentsline {subsubsection}{\numberline {3.4.3}Konfiguracja TCB0 --- pomiar Time-of-Flight}{22}{subsubsection.3.4.3}%
+\contentsline {section}{\numberline {4}Projekt płytki drukowanej (PCB)}{24}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Założenia projektowe PCB}{24}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}Klasy tras i~reguły DRC}{25}{subsection.4.2}%
+\contentsline {section}{\numberline {5}Projekt obudowy}{26}{section.5}%
+\contentsline {subsection}{\numberline {5.1}Założenia konstrukcyjne}{26}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}Elementy funkcjonalne}{26}{subsection.5.2}%
+\contentsline {subsection}{\numberline {5.3}Rendery obudowy}{27}{subsection.5.3}%
+\contentsline {section}{\numberline {6}Algorytm oprogramowania}{28}{section.6}%
+\contentsline {subsection}{\numberline {6.1}Architektura oprogramowania}{28}{subsection.6.1}%
+\contentsline {subsection}{\numberline {6.2}Diagram przepływu}{28}{subsection.6.2}%
+\contentsline {subsection}{\numberline {6.3}Algorytm Goertzela --- wyznaczanie fazy sygnału echa}{30}{subsection.6.3}%
+\contentsline {subsubsection}{\numberline {6.3.1}Podstawy matematyczne}{30}{subsubsection.6.3.1}%
+\contentsline {subsubsection}{\numberline {6.3.2}Parametry implementacji}{30}{subsubsection.6.3.2}%
+\contentsline {subsubsection}{\numberline {6.3.3}Pseudokod}{31}{subsubsection.6.3.3}%
+\contentsline {subsection}{\numberline {6.4}Filtracja wyników --- filtr medianowy}{32}{subsection.6.4}%
+\contentsline {subsection}{\numberline {6.5}Procedura kalibracji}{32}{subsection.6.5}%
+\contentsline {subsubsection}{\numberline {6.5.1}Szacunek zużycia pamięci Flash i~SRAM}{33}{subsubsection.6.5.1}%
+\contentsline {subsubsection}{\numberline {6.5.2}Kluczowe rejestry konfiguracyjne mikrokontrolera}{33}{subsubsection.6.5.2}%
+\contentsline {subsection}{\numberline {6.6}Komunikacja USART}{34}{subsection.6.6}%
+\contentsline {section}{\numberline {7}Budżet kosztów}{35}{section.7}%
+\contentsline {section}{\numberline {8}Budżet mocy}{36}{section.8}%
+\contentsline {subsection}{\numberline {8.1}Prąd pobierany przez poszczególne elementy}{36}{subsection.8.1}%
+\contentsline {subsection}{\numberline {8.2}Scenariusze pracy}{36}{subsection.8.2}%
+\contentsline {subsubsection}{\numberline {8.2.1}Scenariusz 1: Ciągły pomiar (bez uśpienia)}{36}{subsubsection.8.2.1}%
+\contentsline {subsubsection}{\numberline {8.2.2}Scenariusz 2: Pomiar okresowy ze sleep mode (planowany)}{36}{subsubsection.8.2.2}%
+\contentsline {subsubsection}{\numberline {8.2.3}Scenariusz 3: Agresywna optymalizacja (cel)}{37}{subsubsection.8.2.3}%
+\contentsline {section}{\numberline {9}Analiza błędów i~niepewność pomiaru}{38}{section.9}%
+\contentsline {subsection}{\numberline {9.1}Budżet niepewności}{38}{subsection.9.1}%
+\contentsline {subsection}{\numberline {9.2}Szacowany RMSE}{38}{subsection.9.2}%
+\contentsline {subsection}{\numberline {9.3}Analiza worst-case: odległość minimalna $D_{min} = \SI {10}{\centi \metre }$}{38}{subsection.9.3}%
+\contentsline {subsubsection}{\numberline {9.3.1}Adaptacyjna długość burstu}{39}{subsubsection.9.3.1}%
+\contentsline {subsection}{\numberline {9.4}Weryfikacja Silicon Errata ATtiny1616}{40}{subsection.9.4}%
+\contentsline {section}{\numberline {10}Podsumowanie i~planowane optymalizacje}{41}{section.10}%
+\contentsline {subsection}{\numberline {10.1}Szacowana punktacja}{41}{subsection.10.1}%
+\contentsline {subsection}{\numberline {10.2}Planowane optymalizacje na Etap 2}{41}{subsection.10.2}%
+\contentsline {subsection}{\numberline {10.3}Wnioski}{41}{subsection.10.3}%
+\contentsline {section}{\numberline {A}Pseudokod inicjalizacji peryferiów}{42}{appendix.A}%
+\contentsline {section}{Bibliografia}{43}{section*.34}%
