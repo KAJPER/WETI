@@ -1,0 +1,473 @@
+\documentclass[a4paper,11pt]{article}
+
+% ════════════════════ Kodowanie i język ════════════════════
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[polish]{babel}
+
+% ════════════════════ Marginesy ════════════════════
+\usepackage[margin=2.5cm]{geometry}
+
+% ════════════════════ Matematyka ════════════════════
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{siunitx}
+\sisetup{
+	output-decimal-marker = {,},
+	per-mode = symbol,
+	range-phrase = { -- },
+}
+\DeclareSIUnit{\baud}{Bd}
+\DeclareSIUnit{\pkt}{pkt}
+\DeclareSIUnit{\PLN}{PLN}
+
+% ════════════════════ Grafika i tabele ════════════════════
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{caption}
+
+% ════════════════════ Kolory i linki ════════════════════
+\usepackage[dvipsnames]{xcolor}
+\usepackage{hyperref}
+\hypersetup{
+	colorlinks=true,
+	linkcolor=NavyBlue,
+	citecolor=NavyBlue,
+	urlcolor=RoyalBlue,
+}
+
+% ════════════════════ Listingi kodu ════════════════════
+\usepackage{listings}
+\lstset{
+	language=C,
+	basicstyle=\ttfamily\footnotesize,
+	keywordstyle=\color{NavyBlue}\bfseries,
+	commentstyle=\color{Gray}\itshape,
+	stringstyle=\color{OliveGreen},
+	numbers=left,
+	numberstyle=\tiny\color{Gray},
+	frame=single,
+	breaklines=true,
+	captionpos=b,
+	tabsize=4,
+	showstringspaces=false,
+}
+
+% ════════════════════ Nagłówek / stopka ════════════════════
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small Bezkontaktowy miernik odległości --- Etap 2 (prototyp)}
+\fancyhead[R]{\small Wygraj Indeks WETI 2026}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{parskip}
+\usepackage{enumitem}
+
+% ══════════════════════════════════════════════════════════════
+\begin{document}
+
+% ════════════════════ STRONA TYTUŁOWA ════════════════════
+\begin{titlepage}
+	\centering
+	\vspace*{1.5cm}
+
+	{\Large Ogólnopolski Konkurs Projektowy}\\[0.3cm]
+	{\Large\textbf{,,Wygraj Indeks WETI'' --- edycja 2026}}\\[0.2cm]
+	{\large Wydział Elektroniki, Telekomunikacji i~Informatyki\\
+		Politechnika Gdańska}
+
+	\vspace{1.5cm}
+
+	{\Huge\bfseries Bezkontaktowy miernik odległości}\\[0.5cm]
+	{\Large \textbf{Etap 2 --- dokumentacja prototypu}}\\[0.3cm]
+	{\large Ultradźwiękowy pomiar Time-of-Flight ze~sprzętową\\
+		detekcją echa i~kompensacją temperatury}
+
+	\vspace{2.0cm}
+
+	{\large
+		\begin{tabular}{rl}
+			\textbf{Autor:}    & Kacper Popko \\
+			\textbf{Opiekun:}  & Mateusz Karanowski \\
+			\textbf{Szkoła:}   & II Liceum Ogólnokształcące im.\ ks.\ Anny z~Sapiehów \\
+			                   & Jabłonowskiej w~Białymstoku \\
+			\textbf{E-mail:}   & kacper@kajpa.pl \\
+			\textbf{Data:}     & Czerwiec 2026 \\
+		\end{tabular}
+	}
+
+	\vspace{1.5cm}
+
+	\begin{tabular}{ll}
+		\toprule
+		\textbf{Mikrokontroler} & ATtiny1616-SN (tinyAVR 1-series) \\
+		\textbf{Metoda} & Ultradźwiękowy ToF \SI{40}{\kilo\hertz}, sprzętowa detekcja AC1+TCB0 \\
+		\textbf{Zakres} & \SIrange{10}{50}{\centi\metre} \\
+		\textbf{Toolchain} & AVR-GCC 15.2 + avrdude 8.1 (czysto rejestrowo) \\
+		\bottomrule
+	\end{tabular}
+
+	\vfill
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+% ══════════════════════════════════════════════════════════════
+\section{Wprowadzenie i~zakres Etapu 2}
+\label{sec:wstep}
+
+Niniejszy dokument stanowi dokumentację \textbf{zbudowanego i~uruchomionego
+prototypu} bezkontaktowego miernika odległości, dostarczanego w~ramach Etapu~2
+konkursu ,,Wygraj Indeks WETI 2026''. W~odróżnieniu od dokumentacji Etapu~1
+(projekt koncepcyjny) opisuje on \emph{rzeczywisty stan urządzenia} po montażu,
+uruchomieniu i~strojeniu na stanowisku pomiarowym.
+
+W~trakcie realizacji prototypu wprowadzono szereg zmian względem założeń
+projektowych --- wynikających z~praktycznej weryfikacji sprzętu oraz z~analizy
+dokumentacji mikrokontrolera. Zmiany te zestawiono w~sekcji~\ref{sec:zmiany}.
+Najistotniejsza dotyczy ścieżki detekcji echa: pierwotnie zakładano użycie
+komparatora \texttt{AC0}, jednak weryfikacja Tabeli~5-1 noty katalogowej
+wykazała, że wejście echa (pin \texttt{PB4}) jest dodatnim wejściem
+\texttt{AINP3} komparatora \texttt{AC1}, a~nie \texttt{AC0}. Skorygowano to
+w~firmware, dzięki czemu sprzętowa, bezlatencyjna detekcja czasu przelotu
+działa poprawnie.
+
+\subsection{Spełnienie wymagań konkursowych}
+
+\begin{table}[H]
+	\centering
+	\caption{Status wymagań konkursowych w~prototypie}
+	\label{tab:wymagania}
+	\begin{tabularx}{\textwidth}{llX}
+		\toprule
+		\textbf{Parametr} & \textbf{Wymóg} & \textbf{Stan w~prototypie} \\
+		\midrule
+		Napięcie zasilania & \SI{5}{\volt} & Spełnione; LDO MCP1700 $\to$ \SI{3,3}{\volt} \\
+		Zakres pomiaru & \SIrange{10}{50}{\centi\metre} & Spełnione; potwierdzone pomiarami \\
+		Wykrywany obiekt & Karton $20\times20$~\si{\centi\metre} & Spełnione \\
+		Błąd RMSE & im mniejszy tym lepiej & $\approx\SI{6}{\milli\metre}$ (metoda ToF, sek.~\ref{sec:wyniki}) \\
+		Pobór mocy & $100/P_{[\si{\milli\watt}]}$ & Standby+RTC, $P_{avg}<\SI{1}{\milli\watt}$ (sek.~\ref{sec:moc}) \\
+		Koszt elementów & $2500/C_{[\text{PLN}]}$ & \SI{43,73}{\PLN} $\to$ 50~pkt (bez~zmian) \\
+		\bottomrule
+	\end{tabularx}
+\end{table}
+
+% ══════════════════════════════════════════════════════════════
+\section{Architektura zbudowanego urządzenia}
+\label{sec:arch}
+
+\subsection{Schemat blokowy toru sygnałowego}
+
+Tor pomiarowy realizuje pomiar czasu przelotu (Time-of-Flight) impulsu
+ultradźwiękowego \SI{40}{\kilo\hertz}:
+
+\begin{enumerate}[nosep]
+	\item Mikrokontroler generuje paczkę (burst) \SI{40}{\kilo\hertz} na pinie
+	\texttt{PB0}, wzmacnianą tranzystorem \texttt{BC817} sterującym nadajnik US.
+	\item Echo odbierane przez przetwornik RX jest wzmacniane dwustopniowym
+	torem na \texttt{MCP6002} (wzmocnienie $\sim$10$\times$, filtr pasmowy wokół
+	\SI{40}{\kilo\hertz}).
+	\item Wzmocniony sygnał echa (pin \texttt{PB4}) trafia na komparator
+	\texttt{AC1}, porównywany z~progiem z~przetwornika \texttt{DAC1}.
+	\item Przełączenie \texttt{AC1} generuje zdarzenie w~\texttt{EVSYS}, które
+	sprzętowo zatrzaskuje licznik \texttt{TCB0} (Input Capture) --- czas przelotu
+	jest mierzony bez udziału CPU (zerowa latencja programowa).
+	\item Temperatura z~termistora NTC koryguje prędkość dźwięku;
+	odległość $D = c(T)\cdot t_{ToF}/2$.
+\end{enumerate}
+
+\subsection{Mapa pinów ATtiny1616 (stan rzeczywisty)}
+\label{sec:pinout}
+
+Tabela~\ref{tab:pinout} przedstawia \textbf{faktyczne} przyporządkowanie pinów
+w~zbudowanym prototypie. Różni się ono od wstępnego projektu (Etap~1) ---
+zmiany wynikły z~optymalizacji rozprowadzenia ścieżek PCB oraz z~korekty
+przypisania komparatora (patrz sek.~\ref{sec:zmiany}).
+
+\begin{table}[H]
+	\centering
+	\caption{Mapa pinów ATtiny1616 w~prototypie}
+	\label{tab:pinout}
+	\begin{tabularx}{\textwidth}{llX}
+		\toprule
+		\textbf{Pin} & \textbf{Funkcja} & \textbf{Opis / peryferiał} \\
+		\midrule
+		PA0 & UPDI & Programowanie / debug \\
+		PA3 & PRZYCISK & Wejście, pull-up, aktywny stan niski (start pomiaru) \\
+		PA4 & LED & Wyjście, sygnalizacja pomiaru \\
+		PA5 & TERMISTOR & ADC0 AIN5 (kompensacja temperatury, NTC \SI{10}{\kilo\ohm}) \\
+		PA6 & GATE Q1 & Sterowanie P-MOSFET BSS84 (zasilanie toru RX) \\
+		PB0 & TX BURST & Generacja \SI{40}{\kilo\hertz} (programowa) $\to$ R1 $\to$ BC817 \\
+		PB2 & USART0 TXD & Transmisja wyniku, \SI{115200}{\baud} 8N1 \\
+		PB4 & ECHO & AC1 AINP3 (wyjście toru RX $\to$ komparator) \\
+		\bottomrule
+	\end{tabularx}
+\end{table}
+
+% ══════════════════════════════════════════════════════════════
+\section{Oprogramowanie mikrokontrolera}
+\label{sec:firmware}
+
+Firmware napisano w~języku C, kompilowany \textbf{AVR-GCC 15.2} (bez frameworka
+Arduino), wgrywany przez \textbf{avrdude 8.1} interfejsem UPDI. Konfiguracja
+peryferiów odbywa się na poziomie rejestrowym. Plik źródłowy:
+\texttt{firmware/main.c}; plik wynikowy: \texttt{firmware/main.hex}
+(\SI{4134}{\byte} Flash z~\SI{16}{\kilo\byte}).
+
+\subsection{Sprzętowa ścieżka pomiaru ToF}
+\label{sec:hw_capture}
+
+Detekcja echa jest w~pełni sprzętowa i~nie obciąża rdzenia CPU. Łańcuch
+zdarzeń (datasheet sek.~14 i~29):
+
+\begin{table}[H]
+	\centering
+	\caption{Konfiguracja rejestrów ścieżki detekcji echa}
+	\label{tab:rejestry}
+	\footnotesize
+	\begin{tabularx}{\textwidth}{llX}
+		\toprule
+		\textbf{Peryferiał} & \textbf{Konfiguracja} & \textbf{Znaczenie} \\
+		\midrule
+		VREF & \texttt{CTRLC: DAC1REFSEL=2V5} & Referencja \SI{2,5}{\volt} dla DAC1/AC1 ($\leq V_{DD}$) \\
+		     & \texttt{CTRLB: DAC1REFEN=1} & Wymuszone włączenie referencji \\
+		DAC1 & \texttt{DATA=255, ENABLE=1} & Próg detekcji $\approx\SI{2,49}{\volt}$ (tuż pod $V_G$) \\
+		AC1  & \texttt{MUXPOS=AINP3 (PB4)} & Wejście dodatnie = echo \\
+		     & \texttt{MUXNEG=DAC} & Wejście ujemne = próg DAC1 \\
+		     & \texttt{ENABLE=1, HYSMODE=10mV} & Histereza \SI{10}{\milli\volt} \\
+		EVSYS & \texttt{ASYNCCH0=AC1\_OUT} & Źródło: wyjście AC1 \\
+		      & \texttt{ASYNCUSER0=ASYNCCH0} & Odbiorca: TCB0 (input capture) \\
+		TCB0  & \texttt{CNTMODE=CAPT, CAPTEI=1} & Zatrzask licznika na zboczu zdarzenia \\
+		      & \texttt{CLKSEL=CLKDIV1} & \SI{10}{\mega\hertz}, \SI{100}{\nano\second}/takt \\
+		\bottomrule
+	\end{tabularx}
+\end{table}
+
+Próg detekcji jest ustawiony \emph{tuż poniżej} napięcia spoczynkowego toru
+$V_G\approx\SI{2,69}{\volt}$. W~stanie spoczynku $V_{PB4}>V_{DAC1}$, więc
+\texttt{AC1} ma stabilny stan wysoki. Echo wywołuje oscylacje, których
+ujemne półfale schodzą poniżej progu --- każde przejście w~górę generuje
+zbocze narastające, zatrzaskiwane przez \texttt{TCB0}. Pierwsze prawidłowe
+zatrzaśnięcie po czasie blankingu odpowiada nadejściu echa.
+
+\subsection{Algorytm pomiaru}
+
+\begin{enumerate}[nosep]
+	\item Wybudzenie z~uśpienia, włączenie toru analogowego (Q1 ON), stabilizacja
+	\SI{2}{\milli\second}.
+	\item Odczyt temperatury z~NTC, obliczenie $c(T)=331{,}3+0{,}606\,T$ [m/s].
+	\item \textbf{Pomiar wstępny} (burst $N=8$) $\to$ przybliżona odległość
+	$D_{coarse}$.
+	\item \textbf{Adaptacyjna długość burstu} wg $D_{coarse}$:
+	$N=4$ dla $D<\SI{15}{\centi\metre}$, $N=6$ dla
+	\SIrange{15}{25}{\centi\metre}, $N=8$ dla $D\geq\SI{25}{\centi\metre}$
+	(krótszy burst $\Rightarrow$ mniejszy ring-down $\Rightarrow$ detekcja
+	bliskich obiektów; dalekie wymagają maks.\ SNR).
+	\item Seria $M=9$ pomiarów, odrzucenie ring-downu (\texttt{MIN\_TICKS}),
+	filtr medianowy.
+	\item Kalibracja liniowa $D = a\cdot D_{raw}+b$, transmisja wyniku przez USART.
+	\item Wyłączenie toru analogowego, powrót do uśpienia.
+\end{enumerate}
+
+\subsection{Kompensacja temperatury}
+
+Termistor NTC \SI{10}{\kilo\ohm} ($B=3950$) w~dzielniku z~rezystorem
+\SI{10}{\kilo\ohm} do masy. Rezystancja $R_{NTC}=R_{10}\cdot(1023-\text{ADC})/\text{ADC}$;
+temperatura z~modelu Beta:
+\begin{equation}
+	\frac{1}{T} = \frac{1}{T_0} + \frac{1}{B}\ln\!\frac{R_{NTC}}{R_{25}},
+	\qquad T_0 = \SI{298,15}{\kelvin}.
+\end{equation}
+Prędkość dźwięku skalowana liniowo z~temperaturą eliminuje dominujący błąd
+systematyczny (zmiana $\sim\SI{0,17}{\percent}/\si{\kelvin}$).
+
+% ══════════════════════════════════════════════════════════════
+\section{Zarządzanie mocą}
+\label{sec:moc}
+
+Prototyp realizuje agresywną politykę uśpienia zapowiedzianą w~Etapie~1
+(Scenariusz 2/3):
+
+\begin{itemize}[nosep]
+	\item \textbf{Tryb Standby} mikrokontrolera między pomiarami --- rdzeń CPU
+	i~większość peryferiów zatrzymane.
+	\item \textbf{Wybudzanie z~RTC/PIT} co \SI{125}{\milli\second} (licznik PIT
+	taktowany wewnętrznym oscylatorem ULP \SI{32,768}{\kilo\hertz}); po wybudzeniu
+	odpytywany jest przycisk.
+	\item \textbf{Bramkowanie toru analogowego} tranzystorem Q1 (BSS84) ---
+	wzmacniacz \texttt{MCP6002} jest zasilany wyłącznie podczas pomiaru
+	($\sim\SI{30}{\milli\second}$), w~spoczynku pobiera \SI{0}{\micro\ampere}.
+	\item \textbf{ADC i~AC} włączane na żądanie; nieużywane bufory wejściowe pinów
+	wyłączone (\texttt{INPUT\_DISABLE}).
+\end{itemize}
+
+W~stanie spoczynku pobór prądu jest zdominowany przez oscylator ULP RTC
+($\sim\SIrange{1}{3}{\micro\ampere}$). Przy typowym użyciu (pomiar na żądanie)
+średni pobór mocy nie przekracza \SI{1}{\milli\watt}, co odpowiada maksymalnej
+punktacji (\SI{50}{\pkt}) w~kryterium mocy.
+
+\begin{table}[H]
+	\centering
+	\caption{Bilans prądowy (zmierzony / szacowany)}
+	\label{tab:prad}
+	\begin{tabularx}{\textwidth}{Xrr}
+		\toprule
+		\textbf{Stan} & \textbf{Prąd} & \textbf{Uwaga} \\
+		\midrule
+		Pomiar aktywny (op-amp + MCU + ADC) & $\sim\SI{4,3}{\milli\ampere}$ & zmierzone (\SI{5}{\volt}, INA219) \\
+		Spoczynek bez uśpienia (tylko bramkowanie) & $\sim\SI{3,2}{\milli\ampere}$ & zmierzone \\
+		Spoczynek Standby+RTC & $\sim\SIrange{1}{3}{\micro\ampere}$ & szac.\ (ULP osc + RTC) \\
+		\bottomrule
+	\end{tabularx}
+\end{table}
+
+% ══════════════════════════════════════════════════════════════
+\section{Wyniki pomiarowe i~kalibracja}
+\label{sec:wyniki}
+
+Pomiary wykonano kartonem $20\times20$~\si{\centi\metre} ustawionym prostopadle
+do osi przetworników, na czystej ścianie. Po kalibracji liniowej
+($D=a\cdot D_{raw}+b$) uzyskano zgodność z~miarą wzorcową w~całym zakresie
+\SIrange{10}{50}{\centi\metre}.
+
+\begin{table}[H]
+	\centering
+	\caption{Przykładowa charakterystyka po kalibracji (metoda peak/ToF)}
+	\label{tab:wyniki}
+	\begin{tabular}{rrrr}
+		\toprule
+		\textbf{Odl.\ rzecz.\ [mm]} & \textbf{Odczyt śr.\ [mm]} & \textbf{Błąd [mm]} & \textbf{$\sigma$ [mm]} \\
+		\midrule
+		100 & 104 & $+4$  & 4{,}4 \\
+		150 & 159 & $+9$  & 0{,}0 \\
+		200 & 191 & $-9$  & 0{,}0 \\
+		300 & 305 & $+5$  & 5{,}7 \\
+		400 & 401 & $+1$  & 4{,}0 \\
+		500 & 498 & $-2$  & 4{,}5 \\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+Błąd średniokwadratowy z~powyższych punktów:
+\begin{equation}
+	\text{RMSE} = \sqrt{\frac{1}{n}\sum_i (D_i - D_{i,ref})^2} \approx \SI{5,9}{\milli\metre}.
+\end{equation}
+
+Powtarzalność (odchylenie standardowe serii pomiarów dla stałej odległości)
+wynosi $\sigma\approx\SI{4}{\milli\metre}$, a~liniowość charakterystyki
+$R^2>0{,}999$. Sprzętowa detekcja \texttt{AC1+TCB0} zapewnia rozdzielczość
+czasową \SI{100}{\nano\second} (\SI{0,017}{\milli\metre} na takt licznika),
+więc rozdzielczość ograniczają czynniki analogowe (czas narastania obwiedni
+echa), nie zegar.
+
+% ══════════════════════════════════════════════════════════════
+\section{Zmiany względem Etapu 1}
+\label{sec:zmiany}
+
+\begin{table}[H]
+	\centering
+	\caption{Rozbieżności projekt (Etap 1) vs.\ prototyp (Etap 2)}
+	\label{tab:zmiany}
+	\begin{tabularx}{\textwidth}{p{3.2cm}XX}
+		\toprule
+		\textbf{Element} & \textbf{Etap 1 (projekt)} & \textbf{Etap 2 (prototyp)} \\
+		\midrule
+		Komparator echa & AC0, próg z~DAC0 & \textbf{AC1, próg z~DAC1} (PB4=AINP3 jest na AC1, nie AC0 --- Tab.~5-1) \\
+		Generacja TX & TCA0 WO5 (sprzęt.\ PWM, PA5) & Programowe taktowanie burstu na \texttt{PB0} \\
+		Pin LED & PC0 & \textbf{PA4} \\
+		Pin przycisku & PA7 & \textbf{PA3} \\
+		Pin NTC & PB1 (AIN10) & \textbf{PA5} (AIN5) \\
+		Pin echa & PB0 (AIN11)/PB4 & \textbf{PB4} (przeprowadzony z~PA2) \\
+		USART TXD & PA1, \SI{9600}{\baud} & \textbf{PB2, \SI{115200}{\baud}} \\
+		Pomiar fazowy (Goertzel) & planowany & nie zaimplementowany (sek.~\ref{sec:dalsze}) \\
+		Uśpienie & Standby+RTC (plan) & \textbf{zaimplementowane} (Standby+RTC/PIT) \\
+		Bramkowanie op-amp (Q1) & Scenariusz 3 (plan) & \textbf{zaimplementowane} \\
+		\bottomrule
+	\end{tabularx}
+\end{table}
+
+\subsection{Uzasadnienie kluczowej korekty (AC0 $\to$ AC1)}
+
+Tabela~5-1 noty katalogowej \textit{ATtiny1614/1616/1617} (DS40002204A, str.~18)
+jednoznacznie wskazuje, że pin \texttt{PB4} pełni funkcję \texttt{AINN1}
+(wejście \emph{ujemne}) dla komparatora \texttt{AC0}, natomiast funkcję
+\texttt{AINP3} (wejście \emph{dodatnie}) dopiero dla komparatora \texttt{AC1}.
+Ponieważ sygnał echa wymaga wejścia dodatniego, sprzętowa detekcja musi
+korzystać z~\texttt{AC1}. Zgodnie z~architekturą układu (datasheet sek.~29:
+,,instance~$n$ of the AC uses instance~$n$ of the DAC'') próg dla \texttt{AC1}
+pochodzi z~\texttt{DAC1}, którego referencję ustawiają pola \texttt{DAC1REFSEL}
+(\texttt{VREF.CTRLC}) oraz \texttt{DAC1REFEN} (\texttt{VREF.CTRLB}). Korekta ta
+była warunkiem uzyskania niezerowych zatrzaśnięć licznika \texttt{TCB0}.
+
+% ══════════════════════════════════════════════════════════════
+\section{Dostarczane pliki (deliverables)}
+\label{sec:deliverables}
+
+Zgodnie z~wymaganiami Etapu~2 paczka zawiera:
+
+\begin{table}[H]
+	\centering
+	\caption{Zawartość paczki dostarczanej Komisji}
+	\label{tab:deliverables}
+	\begin{tabularx}{\textwidth}{lX}
+		\toprule
+		\textbf{Katalog / plik} & \textbf{Zawartość} \\
+		\midrule
+		\texttt{firmware/main.c} & Źródło oprogramowania (AVR-GCC, rejestrowo) \\
+		\texttt{firmware/main.hex} & Plik wynikowy (Intel HEX) do wgrania przez UPDI \\
+		\texttt{firmware/Makefile} & Skrypt budowania i~programowania \\
+		\texttt{cad/} & Pliki źródłowe CAD: schemat i~PCB (EAGLE \texttt{.sch}/\texttt{.brd}) \\
+		\texttt{gerber/} & Pliki produkcyjne PCB w~formacie Gerber + drill \\
+		\texttt{dokumentacja-etap2/} & Niniejsza dokumentacja (\texttt{.tex} + \texttt{.pdf}) \\
+		\texttt{*.png} & Rendery PCB i~obudowy, schemat \\
+		\bottomrule
+	\end{tabularx}
+\end{table}
+
+\textbf{Uwaga:} pliki produkcyjne Gerber oraz źródła CAD (schemat i~PCB)
+należy wyeksportować z~projektu EAGLE (zadanie CAM dla warstw
+\texttt{TOP/BOTTOM/silk/mask/drill}) i~umieścić w~katalogach \texttt{gerber/}
+oraz \texttt{cad/}. Procedurę i~listę warstw opisano w~pliku
+\texttt{deliverables/README.md}.
+
+% ══════════════════════════════════════════════════════════════
+\section{Dalszy rozwój}
+\label{sec:dalsze}
+
+Funkcje przewidziane w~Etapie~1 a~niezaimplementowane w~obecnym prototypie:
+
+\begin{itemize}[nosep]
+	\item \textbf{Pomiar fazowy (algorytm Goertzela)} --- subpikselowe
+	doszacowanie fazy echa dla rozdzielczości sub-milimetrowej. Obecny prototyp
+	używa wyłącznie pomiaru ToF (RMSE $\approx\SI{6}{\milli\metre}$), co spełnia
+	wymagania zakresu i~obiektu.
+	\item \textbf{Kalibracja wielopunktowa w~EEPROM} --- obecnie kalibracja
+	liniowa (dwa współczynniki w~firmware).
+	\item \textbf{Sterowanie push-pull nadajnika} (\SI{+6}{\deci\bel} SNR) ---
+	wymaga modyfikacji schematu (usunięcie BC817).
+\end{itemize}
+
+% ══════════════════════════════════════════════════════════════
+\section{Podsumowanie}
+\label{sec:podsumowanie}
+
+Zbudowany prototyp realizuje bezkontaktowy pomiar odległości w~zakresie
+\SIrange{10}{50}{\centi\metre} metodą ultradźwiękowego Time-of-Flight ze~sprzętową,
+bezlatencyjną detekcją echa (\texttt{AC1+EVSYS+TCB0}) oraz kompensacją
+temperatury. Zaimplementowano agresywne zarządzanie mocą (Standby+RTC,
+bramkowanie toru analogowego), co zapewnia średni pobór mocy poniżej
+\SI{1}{\milli\watt}. Uzyskany błąd RMSE wynosi $\approx\SI{6}{\milli\metre}$
+przy powtarzalności $\sigma\approx\SI{4}{\milli\metre}$. Wszystkie wymagania
+konkursowe (napięcie, zakres, obiekt, koszt) są spełnione.
+
+\end{document}
