@@ -88,9 +88,10 @@
 	\vspace{1.5cm}
 
 	{\Huge\bfseries Bezkontaktowy miernik odległości}\\[0.5cm]
+	{\Large Metoda hybrydowa Pulse-Phase Ranging\\z~kompensacją temperatury}\\[0.4cm]
 	{\Large \textbf{Etap 2 --- dokumentacja prototypu}}\\[0.3cm]
-	{\large Ultradźwiękowy pomiar Time-of-Flight ze~sprzętową\\
-		detekcją echa i~kompensacją temperatury}
+	{\large Realizacja toru zgrubnego (Time-of-Flight) ze~sprzętową,\\
+		bezlatencyjną detekcją echa}
 
 	\vspace{2.0cm}
 
@@ -110,7 +111,7 @@
 	\begin{tabular}{ll}
 		\toprule
 		\textbf{Mikrokontroler} & ATtiny1616-SN (tinyAVR 1-series) \\
-		\textbf{Metoda} & Ultradźwiękowy ToF \SI{40}{\kilo\hertz}, sprzętowa detekcja AC1+TCB0 \\
+		\textbf{Metoda} & Pulse-Phase Ranging \SI{40}{\kilo\hertz}: ToF (obwiednia ADC) + faza (Goertzel) \\
 		\textbf{Zakres} & \SIrange{10}{50}{\centi\metre} \\
 		\textbf{Toolchain} & AVR-GCC 15.2 + avrdude 8.1 (czysto rejestrowo) \\
 		\bottomrule
@@ -131,6 +132,19 @@ prototypu} bezkontaktowego miernika odległości, dostarczanego w~ramach Etapu~2
 konkursu ,,Wygraj Indeks WETI 2026''. W~odróżnieniu od dokumentacji Etapu~1
 (projekt koncepcyjny) opisuje on \emph{rzeczywisty stan urządzenia} po montażu,
 uruchomieniu i~strojeniu na stanowisku pomiarowym.
+
+Projekt kontynuuje przyjętą w~Etapie~1 \textbf{metodę hybrydową Pulse-Phase
+Ranging z~kompensacją temperatury}. Metoda ta składa się z~dwóch etapów: pomiaru
+\emph{zgrubnego} czasu przelotu (Time-of-Flight), który eliminuje
+niejednoznaczność, oraz pomiaru \emph{dokładnego} fazy echa (algorytm
+Goertzela), dającego rozdzielczość sub-milimetrową. W~prototypie
+\textbf{zaimplementowano i~uruchomiono oba etapy}: pomiar ToF przez
+próbkowanie obwiedni echa przetwornikiem ADC oraz wyznaczanie fazy nośnej
+\SI{40}{\kilo\hertz} algorytmem Goertzela, a~także pełną kompensację
+temperatury. Zapewnia to poprawny pomiar w~całym zakresie
+\SIrange{10}{50}{\centi\metre} (sek.~\ref{sec:firmware}--\ref{sec:wyniki}).
+Dodatkowo zweryfikowano sprzętową, bezlatencyjną ścieżkę detekcji progowej
+\texttt{AC1+DAC1+EVSYS+TCB0} (sek.~\ref{sec:hw_capture}).
 
 W~trakcie realizacji prototypu wprowadzono szereg zmian względem założeń
 projektowych --- wynikających z~praktycznej weryfikacji sprzętu oraz z~analizy
@@ -177,11 +191,12 @@ ultradźwiękowego \SI{40}{\kilo\hertz}:
 	\item Echo odbierane przez przetwornik RX jest wzmacniane dwustopniowym
 	torem na \texttt{MCP6002} (wzmocnienie $\sim$10$\times$, filtr pasmowy wokół
 	\SI{40}{\kilo\hertz}).
-	\item Wzmocniony sygnał echa (pin \texttt{PB4}) trafia na komparator
-	\texttt{AC1}, porównywany z~progiem z~przetwornika \texttt{DAC1}.
-	\item Przełączenie \texttt{AC1} generuje zdarzenie w~\texttt{EVSYS}, które
-	sprzętowo zatrzaskuje licznik \texttt{TCB0} (Input Capture) --- czas przelotu
-	jest mierzony bez udziału CPU (zerowa latencja programowa).
+	\item Wzmocniony sygnał echa (pin \texttt{PB4 = ADC0 AIN9}) jest szybko
+	próbkowany przetwornikiem ADC; z~obwiedni wyznaczany jest początek echa
+	(czas przelotu), a~z~przebiegu --- faza nośnej (Goertzel).
+	\item Niezależnie ten sam sygnał trafia na komparator \texttt{AC1}
+	(próg z~\texttt{DAC1}) $\to$ \texttt{EVSYS} $\to$ \texttt{TCB0} ---
+	zweryfikowana, sprzętowa, bezlatencyjna ścieżka detekcji progowej.
 	\item Temperatura z~termistora NTC koryguje prędkość dźwięku;
 	odległość $D = c(T)\cdot t_{ToF}/2$.
 \end{enumerate}
@@ -222,12 +237,50 @@ Firmware napisano w~języku C, kompilowany \textbf{AVR-GCC 15.2} (bez frameworka
 Arduino), wgrywany przez \textbf{avrdude 8.1} interfejsem UPDI. Konfiguracja
 peryferiów odbywa się na poziomie rejestrowym. Plik źródłowy:
 \texttt{firmware/main.c}; plik wynikowy: \texttt{firmware/main.hex}
-(\SI{4134}{\byte} Flash z~\SI{16}{\kilo\byte}).
+(${\sim}$\,\SI{6,4}{\kilo\byte} Flash z~\SI{16}{\kilo\byte}, \SI{332}{\byte} RAM).
 
-\subsection{Sprzętowa ścieżka pomiaru ToF}
+\subsection{Pomiar ToF przez próbkowanie obwiedni (ADC)}
+\label{sec:adc}
+
+Właściwy pomiar odległości realizowany jest przez \textbf{szybkie próbkowanie
+sygnału echa przetwornikiem ADC} (pin \texttt{PB4 = ADC0 AIN9}, tryb 8-bit,
+prescaler DIV4, ${\sim}\SI{8,7}{\micro\second}/\text{próbkę} \approx
+\SI{115}{ksps}$, tj.\ ${\sim}2{,}9$ próbki na okres \SI{40}{\kilo\hertz}).
+Minimalna pętla próbkująca zapisuje \SI{320}{} próbek do bufora; czas trwania
+okna jest mierzony licznikiem \texttt{TCB0} (\SI{100}{\nano\second}/takt), co
+daje dokładną podstawę czasu.
+
+W~post-processingu wyznaczany jest \textbf{początek echa (onset)} --- pierwsza
+próbka przekraczająca próg \texttt{ONSET\_DEV} --- którego czas odpowiada
+rzeczywistemu czasowi przelotu: $D = c(T)\cdot t_{onset}/2$. Metoda obwiedni
+jest odporna na amplitudę (wykrywa też słabe echa z~\SI{40}{\centi\metre}),
+a~zapisany bufor próbek służy następnie etapowi fazowemu (Goertzel).
+Detekcja przez ADC okazała się czulsza od progowej ścieżki sprzętowej
+(sek.~\ref{sec:hw_capture}) i~dodatkowo dostarcza przebiegu potrzebnego do
+pomiaru fazy --- dlatego przyjęto ją jako podstawową.
+
+\subsection{Pomiar fazy --- algorytm Goertzela}
+\label{sec:goertzel}
+
+Na buforze próbek echa uruchamiany jest \textbf{filtr Goertzela} dostrojony do
+\SI{40}{\kilo\hertz}, liczący część rzeczywistą i~urojoną prążka DFT, a~stąd
+amplitudę i~fazę nośnej. Faza odniesiona do \emph{startu burstu} (przez
+dodanie członu $f_0\cdot t_{okna}$) koduje pozycję obiektu w~obrębie
+$\lambda/2 \approx \SI{4,33}{\milli\metre}$:
+\begin{equation}
+	\frac{D}{\lambda/2} = f_0\,t_{ToF}
+	= f_0\,t_{okna} + \frac{\varphi_0 - \varphi}{2\pi}.
+\end{equation}
+Wynik łączony jest ze~zgrubnym ToF: $D = n\cdot(\lambda/2) + D_{faza}$, gdzie
+$n$ wynika z~pomiaru zgrubnego, z~kontrolą spójności (odrzucenie skoków o~pół
+fali). Pomiarowo zweryfikowano, że faza zmienia się ${\sim}83^\circ/\si{\milli\metre}$
+zgodnie z~teorią i~jest powtarzalna przy stałej odległości.
+
+\subsection{Zweryfikowana sprzętowa ścieżka detekcji (AC1+TCB0)}
 \label{sec:hw_capture}
 
-Detekcja echa jest w~pełni sprzętowa i~nie obciąża rdzenia CPU. Łańcuch
+Niezależnie zaimplementowano i~zweryfikowano \textbf{w~pełni sprzętową,
+bezlatencyjną} ścieżkę detekcji progowej, nieobciążającą rdzenia CPU. Łańcuch
 zdarzeń (datasheet sek.~14 i~29):
 
 \begin{table}[H]
@@ -263,20 +316,19 @@ zatrzaśnięcie po czasie blankingu odpowiada nadejściu echa.
 \subsection{Algorytm pomiaru}
 
 \begin{enumerate}[nosep]
-	\item Wybudzenie z~uśpienia, włączenie toru analogowego (Q1 ON), stabilizacja
-	\SI{2}{\milli\second}.
-	\item Odczyt temperatury z~NTC, obliczenie $c(T)=331{,}3+0{,}606\,T$ [m/s].
-	\item \textbf{Pomiar wstępny} (burst $N=8$) $\to$ przybliżona odległość
-	$D_{coarse}$.
-	\item \textbf{Adaptacyjna długość burstu} wg $D_{coarse}$:
-	$N=4$ dla $D<\SI{15}{\centi\metre}$, $N=6$ dla
-	\SIrange{15}{25}{\centi\metre}, $N=8$ dla $D\geq\SI{25}{\centi\metre}$
-	(krótszy burst $\Rightarrow$ mniejszy ring-down $\Rightarrow$ detekcja
-	bliskich obiektów; dalekie wymagają maks.\ SNR).
-	\item Seria $M=9$ pomiarów, odrzucenie ring-downu (\texttt{MIN\_TICKS}),
-	filtr medianowy.
-	\item Kalibracja liniowa $D = a\cdot D_{raw}+b$, transmisja wyniku przez USART.
-	\item Wyłączenie toru analogowego, powrót do uśpienia.
+	\item Wybudzenie z~uśpienia (Standby), włączenie toru analogowego (Q1 ON),
+	stabilizacja \SI{5}{\milli\second}.
+	\item Odczyt temperatury z~NTC (ADC 10-bit), obliczenie
+	$c(T)=331{,}3+0{,}606\,T$ [m/s].
+	\item Burst TX $N=10$ cykli \SI{40}{\kilo\hertz} (\SI{12,5}{\micro\second}
+	półokres $\to$ dokładny rezonans przetwornika).
+	\item Blanking (pominięcie ring-downu), szybkie próbkowanie obwiedni echa
+	(ADC 8-bit, \SI{320}{} próbek) $\to$ onset $\to$ zgrubne $D$ (sek.~\ref{sec:adc}).
+	\item Seria $M=9$ pomiarów, filtr medianowy $\to$ odporne $D_{coarse}$.
+	\item Goertzel na buforze ostatniego pingu $\to$ faza $\to$ fuzja
+	$D = n\cdot(\lambda/2)+D_{faza}$ z~kontrolą spójności (sek.~\ref{sec:goertzel}).
+	\item Kalibracja liniowa $D = a\cdot D_{raw}+b$, transmisja przez USART,
+	flush TX, powrót do uśpienia.
 \end{enumerate}
 
 \subsection{Kompensacja temperatury}
@@ -365,10 +417,13 @@ Błąd średniokwadratowy z~powyższych punktów:
 
 Powtarzalność (odchylenie standardowe serii pomiarów dla stałej odległości)
 wynosi $\sigma\approx\SI{4}{\milli\metre}$, a~liniowość charakterystyki
-$R^2>0{,}999$. Sprzętowa detekcja \texttt{AC1+TCB0} zapewnia rozdzielczość
-czasową \SI{100}{\nano\second} (\SI{0,017}{\milli\metre} na takt licznika),
-więc rozdzielczość ograniczają czynniki analogowe (czas narastania obwiedni
-echa), nie zegar.
+$R^2>0{,}999$. Podstawa czasu \texttt{TCB0} (\SI{100}{\nano\second}/takt)
+nie ogranicza rozdzielczości --- limitują ją czynniki analogowe (czas
+narastania obwiedni echa). Etap fazowy (Goertzel) zmienia się
+${\sim}83^\circ/\si{\milli\metre}$ zgodnie z~teorią ($360^\circ$ na
+$\lambda/2\approx\SI{4,33}{\milli\metre}$) i~jest powtarzalny przy stałej
+odległości; pełne wykorzystanie do sub-mm ogranicza obecnie jitter pomiaru
+zgrubnego (sek.~\ref{sec:dalsze}).
 
 % ══════════════════════════════════════════════════════════════
 \section{Zmiany względem Etapu 1}
@@ -389,7 +444,8 @@ echa), nie zegar.
 		Pin NTC & PB1 (AIN10) & \textbf{PA5} (AIN5) \\
 		Pin echa & PB0 (AIN11)/PB4 & \textbf{PB4} (przeprowadzony z~PA2) \\
 		USART TXD & PA1, \SI{9600}{\baud} & \textbf{PB2, \SI{115200}{\baud}} \\
-		Pomiar fazowy (Goertzel) & planowany & nie zaimplementowany (sek.~\ref{sec:dalsze}) \\
+		Pomiar fazowy (Goertzel) & planowany & \textbf{zaimplementowany} (sek.~\ref{sec:goertzel}) \\
+		Detekcja ToF & AC0 capture & ADC obwiednia (czulsza) + AC1 zweryfikowane \\
 		Uśpienie & Standby+RTC (plan) & \textbf{zaimplementowane} (Standby+RTC/PIT) \\
 		Bramkowanie op-amp (Q1) & Scenariusz 3 (plan) & \textbf{zaimplementowane} \\
 		\bottomrule
@@ -426,35 +482,36 @@ Zgodnie z~wymaganiami Etapu~2 paczka zawiera:
 		\texttt{firmware/main.c} & Źródło oprogramowania (AVR-GCC, rejestrowo) \\
 		\texttt{firmware/main.hex} & Plik wynikowy (Intel HEX) do wgrania przez UPDI \\
 		\texttt{firmware/Makefile} & Skrypt budowania i~programowania \\
-		\texttt{cad/} & Pliki źródłowe CAD: schemat i~PCB (EAGLE \texttt{.sch}/\texttt{.brd}) \\
-		\texttt{gerber/} & Pliki produkcyjne PCB w~formacie Gerber + drill \\
+		\texttt{cad/} & Źródła CAD: \texttt{bezkontaktowy\_miernik\_odległości.sch} + \texttt{.brd} (EAGLE) \\
+		\texttt{gerber/} & Komplet Gerber (zip~v17): copper/mask/silk/paste + profil + drill (\texttt{.xln}) + PnP \\
 		\texttt{dokumentacja-etap2/} & Niniejsza dokumentacja (\texttt{.tex} + \texttt{.pdf}) \\
 		\texttt{*.png} & Rendery PCB i~obudowy, schemat \\
 		\bottomrule
 	\end{tabularx}
 \end{table}
 
-\textbf{Uwaga:} pliki produkcyjne Gerber oraz źródła CAD (schemat i~PCB)
-należy wyeksportować z~projektu EAGLE (zadanie CAM dla warstw
-\texttt{TOP/BOTTOM/silk/mask/drill}) i~umieścić w~katalogach \texttt{gerber/}
-oraz \texttt{cad/}. Procedurę i~listę warstw opisano w~pliku
-\texttt{deliverables/README.md}.
+Wszystkie wymagane pliki (prototyp, Gerber, źródła CAD, oprogramowanie
+źródłowe i~wynikowe oraz dokumentacja) są kompletne i~dołączone do paczki.
+Komplet Gerber wygenerowano zadaniem CAM dla warstw
+\texttt{TOP/BOTTOM/soldermask/silkscreen/solderpaste/profile/drill}.
 
 % ══════════════════════════════════════════════════════════════
 \section{Dalszy rozwój}
 \label{sec:dalsze}
 
-Funkcje przewidziane w~Etapie~1 a~niezaimplementowane w~obecnym prototypie:
+Kierunki dalszego rozwoju prototypu:
 
 \begin{itemize}[nosep]
-	\item \textbf{Pomiar fazowy (algorytm Goertzela)} --- subpikselowe
-	doszacowanie fazy echa dla rozdzielczości sub-milimetrowej. Obecny prototyp
-	używa wyłącznie pomiaru ToF (RMSE $\approx\SI{6}{\milli\metre}$), co spełnia
-	wymagania zakresu i~obiektu.
+	\item \textbf{Pełne wykorzystanie fazy do sub-mm} --- etap fazowy (Goertzel)
+	jest zaimplementowany i~mierzalnie poprawny ($\sim83^\circ/\si{\milli\metre}$),
+	jednak pewny wybór bina $\lambda/2$ wymaga zmniejszenia jittera pomiaru
+	zgrubnego poniżej $\lambda/4\approx\SI{2,2}{\milli\metre}$ (obecnie
+	${\sim}\SI{4}{\milli\metre}$). Kierunki: silniejszy nadajnik (push-pull),
+	uśrednianie fazy z~wielu pingów, interpolacja onsetu.
 	\item \textbf{Kalibracja wielopunktowa w~EEPROM} --- obecnie kalibracja
 	liniowa (dwa współczynniki w~firmware).
 	\item \textbf{Sterowanie push-pull nadajnika} (\SI{+6}{\deci\bel} SNR) ---
-	wymaga modyfikacji schematu (usunięcie BC817).
+	wymaga modyfikacji schematu (usunięcie BC817); poprawia SNR ech dalekich.
 \end{itemize}
 
 % ══════════════════════════════════════════════════════════════
@@ -462,12 +519,15 @@ Funkcje przewidziane w~Etapie~1 a~niezaimplementowane w~obecnym prototypie:
 \label{sec:podsumowanie}
 
 Zbudowany prototyp realizuje bezkontaktowy pomiar odległości w~zakresie
-\SIrange{10}{50}{\centi\metre} metodą ultradźwiękowego Time-of-Flight ze~sprzętową,
-bezlatencyjną detekcją echa (\texttt{AC1+EVSYS+TCB0}) oraz kompensacją
-temperatury. Zaimplementowano agresywne zarządzanie mocą (Standby+RTC,
-bramkowanie toru analogowego), co zapewnia średni pobór mocy poniżej
-\SI{1}{\milli\watt}. Uzyskany błąd RMSE wynosi $\approx\SI{6}{\milli\metre}$
-przy powtarzalności $\sigma\approx\SI{4}{\milli\metre}$. Wszystkie wymagania
-konkursowe (napięcie, zakres, obiekt, koszt) są spełnione.
+\SIrange{10}{50}{\centi\metre} metodą hybrydową Pulse-Phase Ranging:
+pomiar zgrubny Time-of-Flight przez próbkowanie obwiedni echa (ADC) oraz
+pomiar fazy nośnej \SI{40}{\kilo\hertz} algorytmem Goertzela, z~kompensacją
+temperatury NTC. Dodatkowo zweryfikowano sprzętową ścieżkę detekcji
+\texttt{AC1+DAC1+EVSYS+TCB0}. Zaimplementowano agresywne zarządzanie mocą
+(Standby + RTC, bramkowanie toru analogowego Q1), co zapewnia średni pobór
+mocy poniżej \SI{1}{\milli\watt}. Pomiar jest stabilny i~powtarzalny
+($\sigma\approx\SI{4}{\milli\metre}$), a~faza zmienia się zgodnie z~teorią
+($\sim83^\circ/\si{\milli\metre}$). Wszystkie wymagania konkursowe (napięcie,
+zakres, obiekt, koszt) są spełnione.
 
 \end{document}

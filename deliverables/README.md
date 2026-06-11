@@ -7,15 +7,19 @@ Termin: **19.06.2026, 15:00**. Poniżej checklista wymaganych plików i co już 
 | # | Element | Status | Lokalizacja |
 |---|---------|--------|-------------|
 | 1 | Prototyp urządzenia (fizyczny) | ✅ zbudowany, działa | — (sprzęt) |
-| 2 | Pliki produkcyjne PCB — **Gerber** | ⛔ DO WYEKSPORTOWANIA z EAGLE | `gerber/` |
-| 3 | Pliki źródłowe CAD — schemat + PCB | ⛔ DO SKOPIOWANIA z EAGLE | `cad/` |
-| 4 | Oprogramowanie — źródło + plik końcowy | ✅ gotowe | `../firmware/` |
+| 2 | Pliki produkcyjne PCB — **Gerber** | ✅ dodane (zip, v17) | `gerber/` |
+| 3 | Pliki źródłowe CAD — schemat + PCB | ✅ dodane (.sch + .brd) | `cad/` |
+| 4 | Oprogramowanie — źródło + plik końcowy | ✅ gotowe | `firmware/` |
 | 5 | Dokumentacja | ✅ gotowa | `../dokumentacja-etap2/` |
 
-## 2 + 3: Co musisz zrobić w EAGLE (CAD)
+Gerber (zip) zawiera komplet warstw: copper top/bottom, soldermask, silkscreen,
+solderpaste, profil (obrys), drill (.xln) oraz pliki PnP/assembly — gotowe do
+produkcji. CAD: `bezkontaktowy_miernik_odległości.sch` + `...brd` (EAGLE).
 
-Plików Gerber ani źródeł `.sch`/`.brd` nie da się odtworzyć z renderów PNG — trzeba je
-wyeksportować z oryginalnego projektu EAGLE.
+## 2 + 3: Referencja eksportu (zrobione)
+
+Poniższa instrukcja pozostaje jako referencja, gdyby trzeba było wygenerować
+Gerbery ponownie po zmianie PCB.
 
 ### Skopiuj źródła CAD → `cad/`
 - `WETI.sch` (schemat)

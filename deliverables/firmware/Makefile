@@ -74,7 +74,7 @@ build: $(TARGET).hex $(TARGET).lst size
 
 # Compile + link in one step (LTO-friendly)
 $(TARGET).elf: $(SRC)
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ -lm
 
 # Intel HEX for flashing
 $(TARGET).hex: $(TARGET).elf
