@@ -3,7 +3,7 @@ Archive member included to satisfy reference by file (symbol)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_exit.o)
                               C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3/crtattiny1616.o (exit)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(log.o)
-                              C:\Users\Kacper\AppData\Local\Temp\cc4i51nN.o (symbol from plugin) (logf)
+                              C:\Users\Kacper\AppData\Local\Temp\ccULyClq.o (symbol from plugin) (logf)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(mulsf3x.o)
                               C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(log.o) (__mulsf3x)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(addsf3.o)
@@ -31,23 +31,23 @@ C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(fp_zero.o)
                               C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(addsf3x.o) (__fp_zero)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_udivmodhi4.o)
-                              C:\Users\Kacper\AppData\Local\Temp\cceR94Yx.ltrans0.ltrans.o (__udivmodhi4)
+                              C:\Users\Kacper\AppData\Local\Temp\cc4hgN7l.ltrans0.ltrans.o (__udivmodhi4)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_divmodhi4.o)
-                              C:\Users\Kacper\AppData\Local\Temp\cceR94Yx.ltrans0.ltrans.o (__divmodhi4)
+                              C:\Users\Kacper\AppData\Local\Temp\cc4hgN7l.ltrans0.ltrans.o (__divmodhi4)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_divmodsi4.o)
-                              C:\Users\Kacper\AppData\Local\Temp\cceR94Yx.ltrans0.ltrans.o (__divmodsi4)
+                              C:\Users\Kacper\AppData\Local\Temp\cc4hgN7l.ltrans0.ltrans.o (__divmodsi4)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_negsi2.o)
                               C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_divmodsi4.o) (__negsi2)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_clear_bss.o)
-                              C:\Users\Kacper\AppData\Local\Temp\cceR94Yx.ltrans0.ltrans.o (__do_clear_bss)
+                              C:\Users\Kacper\AppData\Local\Temp\cc4hgN7l.ltrans0.ltrans.o (__do_clear_bss)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_usmulhisi3.o)
-                              C:\Users\Kacper\AppData\Local\Temp\cceR94Yx.ltrans0.ltrans.o (__usmulhisi3)
+                              C:\Users\Kacper\AppData\Local\Temp\cc4hgN7l.ltrans0.ltrans.o (__usmulhisi3)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_mulsidi3.o)
-                              C:\Users\Kacper\AppData\Local\Temp\cceR94Yx.ltrans0.ltrans.o (__mulsidi3)
+                              C:\Users\Kacper\AppData\Local\Temp\cc4hgN7l.ltrans0.ltrans.o (__mulsidi3)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_umulsidi3.o)
                               C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_mulsidi3.o) (__umulsidi3_helper)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_divdi3.o)
-                              C:\Users\Kacper\AppData\Local\Temp\cceR94Yx.ltrans0.ltrans.o (__divdi3)
+                              C:\Users\Kacper\AppData\Local\Temp\cc4hgN7l.ltrans0.ltrans.o (__divdi3)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_udivdi3.o)
                               C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_divdi3.o) (__udivdi3_umoddi3)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_udivmod64.o)
@@ -65,17 +65,17 @@ C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\li
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_muldi3_6.o)
                               C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_umulsidi3.o) (__muldi3_6)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(divsf3.o)
-                              C:\Users\Kacper\AppData\Local\Temp\cceR94Yx.ltrans0.ltrans.o (__divsf3)
+                              C:\Users\Kacper\AppData\Local\Temp\cc4hgN7l.ltrans0.ltrans.o (__divsf3)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(divsf3x.o)
                               C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(divsf3.o) (__divsf3x)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(fixsfsi.o)
-                              C:\Users\Kacper\AppData\Local\Temp\cceR94Yx.ltrans0.ltrans.o (__fixsfsi)
+                              C:\Users\Kacper\AppData\Local\Temp\cc4hgN7l.ltrans0.ltrans.o (__fixsfsi)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(fixunssfsi.o)
                               C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(fixsfsi.o) (__fixunssfsi)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(gesf2.o)
-                              C:\Users\Kacper\AppData\Local\Temp\cceR94Yx.ltrans0.ltrans.o (__gesf2)
+                              C:\Users\Kacper\AppData\Local\Temp\cc4hgN7l.ltrans0.ltrans.o (__gesf2)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(mulsf3.o)
-                              C:\Users\Kacper\AppData\Local\Temp\cceR94Yx.ltrans0.ltrans.o (__mulsf3)
+                              C:\Users\Kacper\AppData\Local\Temp\cc4hgN7l.ltrans0.ltrans.o (__mulsf3)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(fp_cmp.o)
                               C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(gesf2.o) (__fp_cmp)
 
@@ -83,9 +83,9 @@ Discarded input sections
 
  .data          0x00000000        0x0 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3/crtattiny1616.o
  .bss           0x00000000        0x0 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3/crtattiny1616.o
- .text          0x00000000        0x0 C:\Users\Kacper\AppData\Local\Temp\cceR94Yx.ltrans0.ltrans.o
- .data          0x00000000        0x0 C:\Users\Kacper\AppData\Local\Temp\cceR94Yx.ltrans0.ltrans.o
- .bss           0x00000000        0x0 C:\Users\Kacper\AppData\Local\Temp\cceR94Yx.ltrans0.ltrans.o
+ .text          0x00000000        0x0 C:\Users\Kacper\AppData\Local\Temp\cc4hgN7l.ltrans0.ltrans.o
+ .data          0x00000000        0x0 C:\Users\Kacper\AppData\Local\Temp\cc4hgN7l.ltrans0.ltrans.o
+ .bss           0x00000000        0x0 C:\Users\Kacper\AppData\Local\Temp\cc4hgN7l.ltrans0.ltrans.o
  .text          0x00000000        0x0 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_exit.o)
  .data          0x00000000        0x0 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_exit.o)
  .bss           0x00000000        0x0 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_exit.o)
@@ -423,8 +423,8 @@ Linker script and memory map
 
 Address of section .data set to 0x803800
 LOAD C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3/crtattiny1616.o
-LOAD C:\Users\Kacper\AppData\Local\Temp\cc4i51nN.o
-LOAD C:\Users\Kacper\AppData\Local\Temp\cceR94Yx.ltrans0.ltrans.o
+LOAD C:\Users\Kacper\AppData\Local\Temp\ccULyClq.o
+LOAD C:\Users\Kacper\AppData\Local\Temp\cc4hgN7l.ltrans0.ltrans.o
 START GROUP
 LOAD C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a
 LOAD C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a
@@ -532,7 +532,7 @@ END GROUP
 .rela.plt
  *(.rela.plt)
 
-.text           0x00000000      0xf68
+.text           0x00000000      0xffe
  *(.vectors)
  .vectors       0x00000000       0x7c C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3/crtattiny1616.o
                 0x00000000                __vector_default
@@ -595,7 +595,6 @@ END GROUP
                 0x000000a0                __vector_12
                 0x000000a0                __bad_interrupt
                 0x000000a0                __vector_6
-                0x000000a0                __vector_3
                 0x000000a0                __vector_23
                 0x000000a0                __vector_30
                 0x000000a0                __vector_25
@@ -622,147 +621,148 @@ END GROUP
                 0x000000a4                        . = ALIGN (0x2)
  *(.text.*)
  .text.usart_putc
-                0x000000a4        0xe C:\Users\Kacper\AppData\Local\Temp\cceR94Yx.ltrans0.ltrans.o
+                0x000000a4        0xe C:\Users\Kacper\AppData\Local\Temp\cc4hgN7l.ltrans0.ltrans.o
  .text.usart_print
-                0x000000b2       0x1a C:\Users\Kacper\AppData\Local\Temp\cceR94Yx.ltrans0.ltrans.o
+                0x000000b2       0x1a C:\Users\Kacper\AppData\Local\Temp\cc4hgN7l.ltrans0.ltrans.o
  .text.usart_print_u16
-                0x000000cc       0x82 C:\Users\Kacper\AppData\Local\Temp\cceR94Yx.ltrans0.ltrans.o
- .text.adc_read
-                0x0000014e       0x20 C:\Users\Kacper\AppData\Local\Temp\cceR94Yx.ltrans0.ltrans.o
+                0x000000cc       0x82 C:\Users\Kacper\AppData\Local\Temp\cc4hgN7l.ltrans0.ltrans.o
+ .text.__vector_3
+                0x0000014e       0x16 C:\Users\Kacper\AppData\Local\Temp\cc4hgN7l.ltrans0.ltrans.o
+                0x0000014e                __vector_3
  .text.startup.main
-                0x0000016e      0x4fa C:\Users\Kacper\AppData\Local\Temp\cceR94Yx.ltrans0.ltrans.o
-                0x0000016e                main
+                0x00000164      0x59a C:\Users\Kacper\AppData\Local\Temp\cc4hgN7l.ltrans0.ltrans.o
+                0x00000164                main
  .text.libgcc.div
-                0x00000668       0x28 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_udivmodhi4.o)
-                0x00000668                __udivmodhi4
+                0x000006fe       0x28 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_udivmodhi4.o)
+                0x000006fe                __udivmodhi4
  .text.libgcc.div
-                0x00000690       0x28 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_divmodhi4.o)
-                0x00000690                _div
-                0x00000690                __divmodhi4
+                0x00000726       0x28 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_divmodhi4.o)
+                0x00000726                _div
+                0x00000726                __divmodhi4
  .text.libgcc.div
-                0x000006b8       0x2e C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_divmodsi4.o)
-                0x000006b8                __divmodsi4
+                0x0000074e       0x2e C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_divmodsi4.o)
+                0x0000074e                __divmodsi4
  .text.libgcc.div
-                0x000006e6       0x10 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_negsi2.o)
-                0x000006e6                __negsi2
+                0x0000077c       0x10 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_negsi2.o)
+                0x0000077c                __negsi2
  .text.libgcc.mul
-                0x000006f6        0xe C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_usmulhisi3.o)
-                0x000006f6                __usmulhisi3
-                0x000006fa                __usmulhisi3_tail
+                0x0000078c        0xe C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_usmulhisi3.o)
+                0x0000078c                __usmulhisi3
+                0x00000790                __usmulhisi3_tail
  .text.libgcc.mul
-                0x00000704       0x1e C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_mulsidi3.o)
-                0x00000704                __mulsidi3
+                0x0000079a       0x1e C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_mulsidi3.o)
+                0x0000079a                __mulsidi3
  .text.libgcc.mul
-                0x00000722       0x56 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_umulsidi3.o)
-                0x00000722                __umulsidi3
-                0x00000724                __umulsidi3_helper
+                0x000007b8       0x56 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_umulsidi3.o)
+                0x000007b8                __umulsidi3
+                0x000007ba                __umulsidi3_helper
  .text.libgcc.div
-                0x00000778       0x62 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_divdi3.o)
-                0x00000778                __moddi3
-                0x0000077c                __divdi3
-                0x0000077e                __divdi3_moddi3
+                0x0000080e       0x62 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_divdi3.o)
+                0x0000080e                __moddi3
+                0x00000812                __divdi3
+                0x00000814                __divdi3_moddi3
  .text.libgcc.div
-                0x000007da       0x1c C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_udivdi3.o)
-                0x000007da                __umoddi3
-                0x000007de                __udivdi3
-                0x000007e0                __udivdi3_umoddi3
+                0x00000870       0x1c C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_udivdi3.o)
+                0x00000870                __umoddi3
+                0x00000874                __udivdi3
+                0x00000876                __udivdi3_umoddi3
  .text.libgcc.div
-                0x000007f6       0xa2 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_udivmod64.o)
-                0x000007f6                __udivmod64
- .text.libgcc   0x00000898       0x20 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_negdi2.o)
-                0x00000898                __negdi2
+                0x0000088c       0xa2 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_udivmod64.o)
+                0x0000088c                __udivmod64
+ .text.libgcc   0x0000092e       0x20 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_negdi2.o)
+                0x0000092e                __negdi2
  .text.libgcc.prologue
-                0x000008b8       0x32 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_prologue.o)
-                0x000008b8                __prologue_saves__
+                0x0000094e       0x32 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_prologue.o)
+                0x0000094e                __prologue_saves__
  .text.libgcc.prologue
-                0x000008ea       0x30 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_epilogue.o)
-                0x000008ea                __epilogue_restores__
+                0x00000980       0x30 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_epilogue.o)
+                0x00000980                __epilogue_restores__
  .text.libgcc.mul
-                0x0000091a       0x1e C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_umulhisi3.o)
-                0x0000091a                __umulhisi3
+                0x000009b0       0x1e C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_umulhisi3.o)
+                0x000009b0                __umulhisi3
  .text.libgcc.div
-                0x00000938       0x44 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_udivmodsi4.o)
-                0x00000938                __udivmodsi4
+                0x000009ce       0x44 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_udivmodsi4.o)
+                0x000009ce                __udivmodsi4
  .text.libgcc.mul
-                0x0000097c       0x12 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_muldi3_6.o)
-                0x0000097c                __muldi3_6
+                0x00000a12       0x12 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_muldi3_6.o)
+                0x00000a12                __muldi3_6
  .text.avr-libc.fplib
-                0x0000098e       0xa0 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(log.o)
-                0x0000099e                logf
-                0x0000099e                log
+                0x00000a24       0xa0 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(log.o)
+                0x00000a34                logf
+                0x00000a34                log
  .text.avr-libc.fplib
-                0x00000a2e       0xd2 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(mulsf3x.o)
-                0x00000a4c                __mulsf3x
-                0x00000a52                __mulsf3_pse
+                0x00000ac4       0xd2 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(mulsf3x.o)
+                0x00000ae2                __mulsf3x
+                0x00000ae8                __mulsf3_pse
  .text.avr-libc.fplib
-                0x00000b00        0xe C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(addsf3.o)
-                0x00000b00                __subsf3
-                0x00000b02                __addsf3
+                0x00000b96        0xe C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(addsf3.o)
+                0x00000b96                __subsf3
+                0x00000b98                __addsf3
  .text.avr-libc.fplib
-                0x00000b0e       0xcc C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(addsf3x.o)
-                0x00000b30                __addsf3x
+                0x00000ba4       0xcc C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(addsf3x.o)
+                0x00000bc6                __addsf3x
  .text.avr-libc.fplib
-                0x00000bda       0x7a C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(floatsisf.o)
-                0x00000bda                __floatunsisf
-                0x00000bde                __floatsisf
+                0x00000c70       0x7a C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(floatsisf.o)
+                0x00000c70                __floatunsisf
+                0x00000c74                __floatsisf
  .text.avr-libc.fplib
-                0x00000c54        0xc C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(fp_inf.o)
-                0x00000c54                __fp_inf
+                0x00000cea        0xc C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(fp_inf.o)
+                0x00000cea                __fp_inf
  .text.avr-libc.fplib
-                0x00000c60       0x1c C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(fp_mpack.o)
-                0x00000c60                __fp_mpack
-                0x00000c64                __fp_mpack_finite
+                0x00000cf6       0x1c C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(fp_mpack.o)
+                0x00000cf6                __fp_mpack
+                0x00000cfa                __fp_mpack_finite
  .text.avr-libc.fplib
-                0x00000c7c        0x6 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(fp_nan.o)
-                0x00000c7c                __fp_nan
+                0x00000d12        0x6 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(fp_nan.o)
+                0x00000d12                __fp_nan
  .text.avr-libc.fplib
-                0x00000c82       0x4e C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(fp_powser.o)
-                0x00000c82                __fp_powser
+                0x00000d18       0x4e C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(fp_powser.o)
+                0x00000d18                __fp_powser
  .text.avr-libc.fplib
-                0x00000cd0        0xe C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(fp_pscA.o)
-                0x00000cd0                __fp_pscA
+                0x00000d66        0xe C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(fp_pscA.o)
+                0x00000d66                __fp_pscA
  .text.avr-libc.fplib
-                0x00000cde        0xe C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(fp_pscB.o)
-                0x00000cde                __fp_pscB
+                0x00000d74        0xe C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(fp_pscB.o)
+                0x00000d74                __fp_pscB
  .text.avr-libc.fplib
-                0x00000cec       0x22 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(fp_round.o)
-                0x00000cec                __fp_round
+                0x00000d82       0x22 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(fp_round.o)
+                0x00000d82                __fp_round
  .text.avr-libc.fplib
-                0x00000d0e       0x44 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(fp_split3.o)
-                0x00000d0e                __fp_split3
-                0x00000d1e                __fp_splitA
+                0x00000da4       0x44 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(fp_split3.o)
+                0x00000da4                __fp_split3
+                0x00000db4                __fp_splitA
  .text.avr-libc.fplib
-                0x00000d52        0xe C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(fp_zero.o)
-                0x00000d52                __fp_zero
-                0x00000d54                __fp_szero
+                0x00000de8        0xe C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(fp_zero.o)
+                0x00000de8                __fp_zero
+                0x00000dea                __fp_szero
  .text.avr-libc.fplib
-                0x00000d60        0x8 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(divsf3.o)
-                0x00000d60                __divsf3
+                0x00000df6        0x8 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(divsf3.o)
+                0x00000df6                __divsf3
  .text.avr-libc.fplib
-                0x00000d68       0xdc C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(divsf3x.o)
-                0x00000d88                __divsf3x
-                0x00000d8e                __divsf3_pse
+                0x00000dfe       0xdc C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(divsf3x.o)
+                0x00000e1e                __divsf3x
+                0x00000e24                __divsf3_pse
  .text.avr-libc.fplib
-                0x00000e44        0xe C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(fixsfsi.o)
-                0x00000e44                __fixsfsi
+                0x00000eda        0xe C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(fixsfsi.o)
+                0x00000eda                __fixsfsi
  .text.avr-libc.fplib
-                0x00000e52       0x5e C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(fixunssfsi.o)
-                0x00000e52                __fixunssfsi
+                0x00000ee8       0x5e C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(fixunssfsi.o)
+                0x00000ee8                __fixunssfsi
  .text.avr-libc.fplib
-                0x00000eb0        0xa C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(gesf2.o)
-                0x00000eb0                __gesf2
-                0x00000eb0                __gtsf2
+                0x00000f46        0xa C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(gesf2.o)
+                0x00000f46                __gesf2
+                0x00000f46                __gtsf2
  .text.avr-libc.fplib
-                0x00000eba        0x8 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(mulsf3.o)
-                0x00000eba                __mulsf3
+                0x00000f50        0x8 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(mulsf3.o)
+                0x00000f50                __mulsf3
  .text.avr-libc.fplib
-                0x00000ec2       0x48 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(fp_cmp.o)
-                0x00000ec2                __fp_cmp
-                0x00000f0a                        . = ALIGN (0x2)
+                0x00000f58       0x48 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(fp_cmp.o)
+                0x00000f58                __fp_cmp
+                0x00000fa0                        . = ALIGN (0x2)
  *(.fini9)
- .fini9         0x00000f0a        0x0 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_exit.o)
-                0x00000f0a                _exit
-                0x00000f0a                exit
+ .fini9         0x00000fa0        0x0 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_exit.o)
+                0x00000fa0                _exit
+                0x00000fa0                exit
  *(.fini9)
  *(.fini8)
  *(.fini8)
@@ -781,27 +781,27 @@ END GROUP
  *(.fini1)
  *(.fini1)
  *(.fini0)
- .fini0         0x00000f0a        0x4 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_exit.o)
+ .fini0         0x00000fa0        0x4 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_exit.o)
  *(.fini0)
  *(.hightext)
  *(.hightext*)
  *(.progmemx)
  *(.progmemx.*)
  .progmemx.gcc_fplib.log
-                0x00000f0e       0x5a C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(log.o)
-                0x00000f68                        . = ALIGN (0x2)
+                0x00000fa4       0x5a C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(log.o)
+                0x00000ffe                        . = ALIGN (0x2)
  *(.jumptables)
  *(.jumptables*)
-                0x00000f68                        _etext = .
+                0x00000ffe                        _etext = .
 
-.rodata         0x00008f68       0x60 load address 0x00000f68
+.rodata         0x00008ffe       0x6b load address 0x00000ffe
  *(.rodata)
  *(.rodata*)
  .rodata.main.str1.1
-                0x00008f68       0x60 C:\Users\Kacper\AppData\Local\Temp\cceR94Yx.ltrans0.ltrans.o
+                0x00008ffe       0x6b C:\Users\Kacper\AppData\Local\Temp\cc4hgN7l.ltrans0.ltrans.o
  *(.gnu.linkonce.r*)
 
-.data           0x00803800        0x0 load address 0x00000fc8
+.data           0x00803800        0x0 load address 0x00001069
                 [!provide]                        PROVIDE (__data_start = .)
  *(.data)
  *(.data*)
@@ -810,26 +810,22 @@ END GROUP
                 0x00803800                        _edata = .
                 [!provide]                        PROVIDE (__data_end = .)
 
-.bss            0x00803800        0x6
+.bss            0x00803800        0x2
                 0x00803800                        PROVIDE (__bss_start = .)
  *(.bss)
  *(.bss*)
- .bss.diag_baseline
-                0x00803800        0x2 C:\Users\Kacper\AppData\Local\Temp\cceR94Yx.ltrans0.ltrans.o
- .bss.diag_peak_us
-                0x00803802        0x2 C:\Users\Kacper\AppData\Local\Temp\cceR94Yx.ltrans0.ltrans.o
- .bss.diag_peak
-                0x00803804        0x2 C:\Users\Kacper\AppData\Local\Temp\cceR94Yx.ltrans0.ltrans.o
+ .bss.diag_ticks
+                0x00803800        0x2 C:\Users\Kacper\AppData\Local\Temp\cc4hgN7l.ltrans0.ltrans.o
  *(COMMON)
-                0x00803806                        PROVIDE (__bss_end = .)
-                0x00000fc8                        __data_load_start = LOADADDR (.data)
-                0x00000fc8                        __data_load_end = (__data_load_start + SIZEOF (.data))
+                0x00803802                        PROVIDE (__bss_end = .)
+                0x00001069                        __data_load_start = LOADADDR (.data)
+                0x00001069                        __data_load_end = (__data_load_start + SIZEOF (.data))
 
-.noinit         0x00803806        0x0
+.noinit         0x00803802        0x0
                 [!provide]                        PROVIDE (__noinit_start = .)
  *(.noinit .noinit.* .gnu.linkonce.n.*)
                 [!provide]                        PROVIDE (__noinit_end = .)
-                0x00803806                        _end = .
+                0x00803802                        _end = .
                 [!provide]                        PROVIDE (__heap_start = .)
                 0x00000000                        __flmap_init_label = DEFINED (__flmap_noinit_start)?__flmap_noinit_start:0x0
                 0x00000000                        __flmap = DEFINED (__flmap)?__flmap:0x0
@@ -870,7 +866,7 @@ END GROUP
 
 .comment        0x00000000       0x12
  *(.comment)
- .comment       0x00000000       0x12 C:\Users\Kacper\AppData\Local\Temp\cceR94Yx.ltrans0.ltrans.o
+ .comment       0x00000000       0x12 C:\Users\Kacper\AppData\Local\Temp\cc4hgN7l.ltrans0.ltrans.o
                                  0x13 (size before relaxing)
 
 .note.gnu.avr.deviceinfo
