@@ -423,6 +423,54 @@ temperatura z~modelu Beta:
 Prędkość dźwięku skalowana liniowo z~temperaturą eliminuje dominujący błąd
 systematyczny (zmiana $\sim\SI{0,17}{\percent}/\si{\kelvin}$).
 
+\subsection{Kalibracja polowa w~EEPROM}
+\label{sec:eeprom}
+
+Urządzenie obsługuje 2-punktową kalibrację polową zapisywaną w~EEPROM
+(\SI{256}{\byte}). Tryb kalibracji uruchamia się przytrzymując przycisk przy
+starcie; urządzenie prowadzi przez ustawienie celu na \SI{100}{} i~\SI{400}{\milli\metre}
+(sygnalizacja LED + USART), po czym dopasowuje $real = a\cdot raw + b$ metodą
+2-punktową i~zapisuje rekord ($a$, $b$) z~sumą kontrolną CRC-8. Przy starcie
+rekord jest walidowany (magic + CRC); w~razie błędu używane są współczynniki
+domyślne. Eliminuje to konieczność rekompilacji przy zmianie egzemplarza.
+
+\subsection{Kluczowe fragmenty kodu (rejestrowo)}
+\label{sec:listings}
+
+Konfiguracja peryferiów odbywa się bez warstwy Arduino, bezpośrednio na
+rejestrach. Sprzętowy łańcuch detekcji echa (komparator $\to$ event system
+$\to$ input capture):
+
+\begin{lstlisting}[caption={Łańcuch AC1 $\to$ EVSYS $\to$ TCB0 (rejestrowo)},label={lst:hw}]
+// AC1: + = PB4 (AINP3), - = DAC1 (prog); AC1 uzywa DAC1 (datasheet 29.x)
+VREF.CTRLC = (VREF.CTRLC & ~VREF_DAC1REFSEL_gm) | VREF_DAC1REFSEL_2V5_gc;
+VREF.CTRLB |= VREF_DAC1REFEN_bm;
+DAC1.DATA   = DAC_THRESHOLD;            // prog ~2.49 V
+DAC1.CTRLA  = DAC_ENABLE_bm;
+AC1.MUXCTRLA = AC_MUXPOS_PIN3_gc | AC_MUXNEG_DAC_gc;
+AC1.CTRLA    = AC_ENABLE_bm | AC_HYSMODE_10mV_gc;
+// EVSYS: AC1_OUT -> async ch0 -> TCB0 (user 0)
+EVSYS.ASYNCCH0   = EVSYS_ASYNCCH0_AC1_OUT_gc;
+EVSYS.ASYNCUSER0 = EVSYS_ASYNCUSER0_ASYNCCH0_gc;
+// TCB0: input capture, 10 MHz (100 ns/takt)
+TCB0.CTRLB = TCB_CNTMODE_CAPT_gc;
+TCB0.EVCTRL= TCB_CAPTEI_bm;
+TCB0.CTRLA = TCB_CLKSEL_CLKDIV1_gc | TCB_ENABLE_bm;
+\end{lstlisting}
+
+Rdzeń pomiaru fazy --- rekurencja Goertzela na buforze próbek echa:
+
+\begin{lstlisting}[caption={Filtr Goertzela @ 40 kHz},label={lst:goertzel}]
+float cw = cosf(omega), sw = sinf(omega), coeff = 2.0f*cw, s1 = 0, s2 = 0;
+for (uint16_t k = 0; k < GOERTZEL_W; k++) {
+    float x  = (float)((int16_t)echo_raw[wstart+k] - (int16_t)echo_baseline);
+    float s0 = x + coeff*s1 - s2;       // s[n] = x[n] + 2cos(w) s[n-1] - s[n-2]
+    s2 = s1; s1 = s0;
+}
+float re = s1 - s2*cw, im = s2*sw;
+float phase = atan2f(im, re);           // faza nosnej w oknie
+\end{lstlisting}
+
 % ══════════════════════════════════════════════════════════════
 \section{Zarządzanie mocą}
 \label{sec:moc}
@@ -621,8 +669,9 @@ Kierunki dalszego rozwoju prototypu:
 	zgrubnego poniżej $\lambda/4\approx\SI{2,2}{\milli\metre}$ (obecnie
 	${\sim}\SI{4}{\milli\metre}$). Kierunki: silniejszy nadajnik (push-pull),
 	uśrednianie fazy z~wielu pingów, interpolacja onsetu.
-	\item \textbf{Kalibracja wielopunktowa w~EEPROM} --- obecnie kalibracja
-	liniowa (dwa współczynniki w~firmware).
+	\item \textbf{Kalibracja wielopunktowa ($>2$ pkt) / LUT} --- zaimplementowano
+	2-punktową kalibrację polową w~EEPROM (sek.~\ref{sec:eeprom}); rozszerzenie
+	do LUT z~interpolacją skompensowałoby ewentualną nieliniowość.
 	\item \textbf{Sterowanie push-pull nadajnika} (\SI{+6}{\deci\bel} SNR) ---
 	wymaga modyfikacji schematu (usunięcie BC817); poprawia SNR ech dalekich.
 \end{itemize}

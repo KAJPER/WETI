@@ -29,8 +29,10 @@
 #include <avr/cpufunc.h>
 #include <avr/interrupt.h>
 #include <avr/sleep.h>
+#include <avr/eeprom.h>
 #include <util/delay.h>
 #include <stdint.h>
+#include <stddef.h>
 #include <math.h>
 
 #define BAUD_RATE        115200UL
@@ -68,9 +70,15 @@
 /* ----- Linear calibration:  D_mm = raw_mm * CAL_A_NUM/CAL_A_DEN + CAL_OFFSET_MM
  * Defaults are neutral (gain 1.000, offset 0). Tune against a ruler:
  * pick two reference distances, solve a and b, update these three values. */
-#define CAL_A_NUM        989        /* fitted: Dc=1.011*real+3.2 -> real=0.989*raw-72 */
+#define CAL_A_NUM        989        /* default slope x1000 (fit @10-40cm) */
 #define CAL_A_DEN        1000
-#define CAL_OFFSET_MM    (-72)      /* envelope-rise + slope correction (fit @10-40cm) */
+#define CAL_OFFSET_MM    (-72)      /* default offset [mm] */
+
+/* 2-point field calibration stored in EEPROM. real = a*raw_mm + b, with
+ * a = (REF2-REF1)/(raw2-raw1), b = REF1 - a*raw1. Reference distances: */
+#define CAL_REF1_MM      100
+#define CAL_REF2_MM      400
+#define CAL_MAGIC        0x57E2u    /* 'WETI' marker for a valid EEPROM record */
 
 /* ----- NTC (10k, Beta model), divider: +3V3 -- NTC -- PA5 -- 10k -- GND ----- */
 #define NTC_B            3950
@@ -205,6 +213,7 @@ static uint16_t adc_read(uint8_t mux)
 
 static int16_t ntc_read_temp_c16(void)
 {
+    adc_on();                                     /* ensure ADC enabled */
     adc_cfg_ntc();                                /* NTC needs full resolution */
     /* 8x oversampling -> ~+1.5 bit, lower temperature noise */
     uint32_t acc = 0;
@@ -394,14 +403,60 @@ static uint16_t measure_once_ticks(uint8_t n_cycles)
     return (uint16_t)onset_ticks;
 }
 
-/* Calibrated distance [mm] from a (robustly aggregated) onset tick count. */
+/* Active calibration (loaded from EEPROM if valid, else compile defaults). */
+static int16_t g_cal_a = CAL_A_NUM;     /* slope x1000 */
+static int16_t g_cal_b = CAL_OFFSET_MM; /* offset [mm] */
+
+/* Uncalibrated distance [mm] from onset ticks (raw geometric ToF). */
+static int32_t ticks_to_raw_mm(int32_t c_x1000, uint32_t ticks)
+{
+    return (int32_t)(((int64_t)c_x1000 * (int64_t)ticks) / 20000000LL);
+}
+
+/* Calibrated distance [mm]: real = a*raw + b (a in x1000). */
 static uint16_t ticks_to_mm(int32_t c_x1000, uint32_t ticks)
 {
-    int32_t raw = (int32_t)(((int64_t)c_x1000 * (int64_t)ticks) / 20000000LL);
-    int32_t d   = (raw * CAL_A_NUM) / CAL_A_DEN + CAL_OFFSET_MM;
+    int32_t raw = ticks_to_raw_mm(c_x1000, ticks);
+    int32_t d   = (raw * (int32_t)g_cal_a) / 1000 + (int32_t)g_cal_b;
     if (d < 0)      d = 0;
     if (d > 0xFFFE) d = 0xFFFE;
     return (uint16_t)d;
+}
+
+/* ============================== EEPROM CALIBRATION ================ */
+typedef struct { uint16_t magic; int16_t a_x1000; int16_t b_mm; uint8_t crc; } cal_t;
+static cal_t EEMEM ee_cal;
+
+static uint8_t cal_crc8(const cal_t *c)
+{
+    const uint8_t *p = (const uint8_t *)c;
+    uint8_t crc = 0;
+    for (uint8_t i = 0; i < offsetof(cal_t, crc); i++) {
+        crc ^= p[i];
+        for (uint8_t b = 0; b < 8; b++)
+            crc = (crc & 0x80) ? (uint8_t)((crc << 1) ^ 0x07) : (uint8_t)(crc << 1);
+    }
+    return crc;
+}
+
+/* Load EEPROM cal into g_cal_a/g_cal_b; keep defaults if record invalid. */
+static void cal_load(void)
+{
+    cal_t c;
+    eeprom_read_block(&c, &ee_cal, sizeof(c));
+    if (c.magic == CAL_MAGIC && c.crc == cal_crc8(&c) &&
+        c.a_x1000 > 500 && c.a_x1000 < 1500) {
+        g_cal_a = c.a_x1000;
+        g_cal_b = c.b_mm;
+    }
+}
+
+static void cal_save(int16_t a_x1000, int16_t b_mm)
+{
+    cal_t c = { CAL_MAGIC, a_x1000, b_mm, 0 };
+    c.crc = cal_crc8(&c);
+    eeprom_update_block(&c, &ee_cal, sizeof(c));
+    g_cal_a = a_x1000; g_cal_b = b_mm;
 }
 
 /* ============================== PHASE FUSION ====================== */
@@ -436,6 +491,59 @@ static uint16_t phase_fuse_mm(int32_t c_x1000, uint16_t d_coarse,
     return (uint16_t)lroundf(dfine);
 }
 
+/* ============================== SERIES ============================ */
+/* Series-result globals (filled by measure_coarse_ticks). */
+static float    g_sumc, g_sums;
+static uint8_t  g_npz, g_nv;
+
+/* Adaptive-burst measurement series with MAD-robust aggregation in the tick
+ * domain. Returns robust onset ticks (0 = no echo); fills g_sumc/g_sums/g_npz
+ * (phase phasors) and g_nv (valid pings). Powers the analog front-end itself. */
+static uint32_t measure_coarse_ticks(int32_t c_x1000)
+{
+    opamp_on(); adc_on(); _delay_ms(5);
+    (void)adc_read(ADC_MUXPOS_AIN5_gc);
+
+    uint16_t ct    = measure_once_ticks(BURST_N);
+    uint8_t  n_use = (ct == 0 || ticks_to_mm(c_x1000, ct) > FAR_THRESH_MM)
+                     ? BURST_N_FAR : BURST_N;
+
+    uint16_t tk[MEDIAN_OF_N];
+    uint8_t  nv = 0, npz = 0;
+    float    sumc = 0.0f, sums = 0.0f;
+    for (uint8_t i = 0; i < MEDIAN_OF_N; i++) {
+        uint16_t t = measure_once_ticks(n_use);
+        if (t) {
+            tk[nv++] = t;
+            if (g_phase_ok) { sumc += g_pcos; sums += g_psin; npz++; }
+        }
+        _delay_ms(15);
+    }
+    adc_off(); opamp_off();
+
+    g_nv = nv; g_npz = npz; g_sumc = sumc; g_sums = sums;
+    if (nv < MIN_VALID_HITS) return 0;
+
+    for (uint8_t i = 1; i < nv; i++) {
+        uint16_t v = tk[i]; int8_t j = i - 1;
+        while (j >= 0 && tk[j] > v) { tk[j+1] = tk[j]; j--; } tk[j+1] = v;
+    }
+    uint16_t med = tk[nv / 2];
+    uint16_t dv[MEDIAN_OF_N];
+    for (uint8_t i = 0; i < nv; i++) dv[i] = tk[i] > med ? tk[i]-med : med-tk[i];
+    for (uint8_t i = 1; i < nv; i++) {
+        uint16_t v = dv[i]; int8_t j = i - 1;
+        while (j >= 0 && dv[j] > v) { dv[j+1] = dv[j]; j--; } dv[j+1] = v;
+    }
+    uint16_t lim = (uint16_t)(dv[nv/2] * 3u) + 2u;
+    uint32_t sum = 0; uint8_t cnt = 0;
+    for (uint8_t i = 0; i < nv; i++) {
+        uint16_t d = tk[i] > med ? tk[i]-med : med-tk[i];
+        if (d <= lim) { sum += tk[i]; cnt++; }
+    }
+    return cnt ? (sum / cnt) : med;
+}
+
 /* ============================== BUTTON / SLEEP ===================== */
 static uint8_t button_pressed(void) { return (PORTA.IN & PIN3_bm) == 0; }
 
@@ -456,6 +564,64 @@ static void sleep_until_button(void)
     }
 }
 
+/* ============================== CALIBRATION MODE ================== */
+/* Block (active poll) until a debounced press + release. */
+static void wait_press_release(void)
+{
+    while (button_pressed()) _delay_ms(5);          /* wait release first */
+    _delay_ms(20);
+    while (!button_pressed()) _delay_ms(5);         /* wait press */
+    _delay_ms(20);
+    while (button_pressed()) _delay_ms(5);          /* wait release */
+    _delay_ms(20);
+}
+
+static void cal_blink(uint8_t n)
+{
+    while (n--) { PORTA.OUTSET = PIN4_bm; _delay_ms(80);
+                  PORTA.OUTCLR = PIN4_bm; _delay_ms(120); }
+}
+
+/* 2-point field calibration. Entered by holding the button at power-up.
+ * Prompts (USART + LED) to place the target at CAL_REF1_MM then CAL_REF2_MM;
+ * fits real = a*raw + b and stores it in EEPROM. */
+static void cal_mode(void)
+{
+    int16_t t_dC    = ntc_read_temp_c16();
+    int32_t c_x1000 = 331300L + ((int32_t)606 * (int32_t)t_dC) / 10L;
+
+    usart_print("\r\n=== KALIBRACJA ===\r\n");
+    usart_print("Ustaw cel na 100 mm, klik...\r\n"); usart_flush();
+    cal_blink(1);
+    wait_press_release();
+    uint32_t tk1 = measure_coarse_ticks(c_x1000);
+    if (!tk1) { usart_print("REF1 brak echa - przerwano\r\n"); usart_flush(); return; }
+    int32_t raw1 = ticks_to_raw_mm(c_x1000, tk1);
+
+    usart_print("Ustaw cel na 400 mm, klik...\r\n"); usart_flush();
+    cal_blink(2);
+    wait_press_release();
+    uint32_t tk2 = measure_coarse_ticks(c_x1000);
+    if (!tk2) { usart_print("REF2 brak echa - przerwano\r\n"); usart_flush(); return; }
+    int32_t raw2 = ticks_to_raw_mm(c_x1000, tk2);
+
+    if (raw2 <= raw1 + 10) { usart_print("Bledne punkty - przerwano\r\n"); usart_flush(); return; }
+
+    float a = (float)(CAL_REF2_MM - CAL_REF1_MM) / (float)(raw2 - raw1);
+    float b = (float)CAL_REF1_MM - a * (float)raw1;
+    int16_t a_x1000 = (int16_t)lroundf(a * 1000.0f);
+    int16_t b_mm    = (int16_t)lroundf(b);
+    cal_save(a_x1000, b_mm);
+
+    usart_print("Zapisano EEPROM: a=");
+    usart_print_u16((uint16_t)a_x1000);
+    usart_print(" b=");
+    if (b_mm < 0) { usart_putc('-'); b_mm = (int16_t)-b_mm; }
+    usart_print_u16((uint16_t)b_mm);
+    usart_print("\r\n"); usart_flush();
+    cal_blink(5);
+}
+
 /* ============================== MAIN =============================== */
 int main(void)
 {
@@ -468,101 +634,59 @@ int main(void)
     tcb0_init();
     rtc_pit_init();
 
-    /* Startup blink */
-    for (uint8_t i = 0; i < 3; i++) {
-        PORTA.OUTSET = PIN4_bm; _delay_ms(150);
-        PORTA.OUTCLR = PIN4_bm; _delay_ms(150);
-    }
+    cal_load();                                       /* EEPROM cal or defaults */
 
     uint8_t rst = RSTCTRL.RSTFR;
     RSTCTRL.RSTFR = rst;
     usart_print("=== WETI ultrasonic meter (Etap2) RSTFR=0x");
     usart_putc("0123456789ABCDEF"[(rst >> 4) & 0xF]);
     usart_putc("0123456789ABCDEF"[rst & 0xF]);
-    usart_print(" ===\r\n");
+    usart_print(g_cal_a != CAL_A_NUM || g_cal_b != CAL_OFFSET_MM
+                ? " cal=EEPROM ===\r\n" : " cal=default ===\r\n");
     usart_flush();
+
+    /* Hold the button at power-up to enter field calibration (checked early,
+     * before the startup blink, so a brief hold is enough). */
+    if (button_pressed()) {
+        _delay_ms(50);
+        if (button_pressed()) cal_mode();
+    }
+
+    /* Startup blink = ready */
+    for (uint8_t i = 0; i < 3; i++) {
+        PORTA.OUTSET = PIN4_bm; _delay_ms(150);
+        PORTA.OUTCLR = PIN4_bm; _delay_ms(150);
+    }
 
     uint16_t seq = 0;
 
     for (;;) {
         sleep_until_button();
         seq++;
+        PORTA.OUTSET = PIN4_bm;                        /* LED on */
 
-        /* Power up analog front-end for the measurement */
-        opamp_on();
-        adc_on();
-        _delay_ms(5);                                /* op-amp / VDD_AMP settle */
-        (void)adc_read(ADC_MUXPOS_AIN5_gc);          /* ADC warm-up */
+        int16_t  t_dC    = ntc_read_temp_c16();
+        int32_t  c_x1000 = 331300L + ((int32_t)606 * (int32_t)t_dC) / 10L;
+        uint32_t coarse_ticks = measure_coarse_ticks(c_x1000);  /* powers FE */
 
-        PORTA.OUTSET = PIN4_bm;                       /* LED on */
-
-        int16_t t_dC    = ntc_read_temp_c16();
-        int32_t c_x1000 = 331300L + ((int32_t)606 * (int32_t)t_dC) / 10L;
-
-        /* Adaptive burst: a coarse ping picks burst length. Far / no-echo ->
-         * longer burst (stronger echo); near -> short burst (keeps 10 cm). */
-        uint16_t ct      = measure_once_ticks(BURST_N);
-        uint8_t  n_use   = (ct == 0 || ticks_to_mm(c_x1000, ct) > FAR_THRESH_MM)
-                           ? BURST_N_FAR : BURST_N;
-
-        /* Collect onset ticks + accumulate phase phasors over the series. */
-        uint16_t tk[MEDIAN_OF_N];
-        uint8_t  nv = 0, npz = 0;
-        float    sumc = 0.0f, sums = 0.0f;
-        for (uint8_t i = 0; i < MEDIAN_OF_N; i++) {
-            uint16_t t = measure_once_ticks(n_use);
-            if (t) {
-                tk[nv++] = t;
-                if (g_phase_ok) { sumc += g_pcos; sums += g_psin; npz++; }
-            }
-            _delay_ms(15);
-        }
-
-        PORTA.OUTCLR = PIN4_bm;                       /* LED off */
-        adc_off();
-        opamp_off();                                  /* power down front-end */
+        PORTA.OUTCLR = PIN4_bm;                        /* LED off */
 
         usart_print("#");
         usart_print_u16(seq);
         usart_putc(' ');
-        if (nv < MIN_VALID_HITS) {
+        if (g_nv < MIN_VALID_HITS || coarse_ticks == 0) {
             usart_print("NO ECHO T=");
             usart_print_temp_dC(t_dC);
             usart_print("C (");
-            usart_print_u16(nv);
+            usart_print_u16(g_nv);
             usart_print("/");
             usart_print_u16(MEDIAN_OF_N);
             usart_print(")");
         } else {
-            /* sort ticks, take median */
-            for (uint8_t i = 1; i < nv; i++) {
-                uint16_t v = tk[i]; int8_t j = i - 1;
-                while (j >= 0 && tk[j] > v) { tk[j+1] = tk[j]; j--; }
-                tk[j+1] = v;
-            }
-            uint16_t med = tk[nv / 2];
-            /* MAD: median absolute deviation -> robust mean of inliers */
-            uint16_t dv[MEDIAN_OF_N];
-            for (uint8_t i = 0; i < nv; i++)
-                dv[i] = tk[i] > med ? tk[i] - med : med - tk[i];
-            for (uint8_t i = 1; i < nv; i++) {
-                uint16_t v = dv[i]; int8_t j = i - 1;
-                while (j >= 0 && dv[j] > v) { dv[j+1] = dv[j]; j--; }
-                dv[j+1] = v;
-            }
-            uint16_t mad = dv[nv / 2];
-            uint16_t lim = (uint16_t)(mad * 3u) + 2u;
-            uint32_t sum = 0; uint8_t cnt = 0;
-            for (uint8_t i = 0; i < nv; i++) {
-                uint16_t d = tk[i] > med ? tk[i] - med : med - tk[i];
-                if (d <= lim) { sum += tk[i]; cnt++; }
-            }
-            uint32_t coarse_ticks = cnt ? (sum / cnt) : med;
-
             uint16_t d_coarse = ticks_to_mm(c_x1000, coarse_ticks);
             int16_t  ph_d10; uint8_t plv_pct;
             uint16_t d_fine = phase_fuse_mm(c_x1000, d_coarse,
-                                            sumc, sums, npz, &ph_d10, &plv_pct);
+                                            g_sumc, g_sums, g_npz, &ph_d10, &plv_pct);
 
             usart_print("D=");
             usart_print_u16(d_fine);
@@ -581,7 +705,7 @@ int main(void)
             usart_print(" T=");
             usart_print_temp_dC(t_dC);
             usart_print("C ");
-            usart_print_u16(nv);
+            usart_print_u16(g_nv);
             usart_print("/");
             usart_print_u16(MEDIAN_OF_N);
             usart_print(" pk=");
