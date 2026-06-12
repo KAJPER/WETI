@@ -169,7 +169,7 @@ działa poprawnie.
 		Napięcie zasilania & \SI{5}{\volt} & Spełnione; LDO MCP1700 $\to$ \SI{3,3}{\volt} \\
 		Zakres pomiaru & \SIrange{10}{50}{\centi\metre} & Spełnione; potwierdzone pomiarami \\
 		Wykrywany obiekt & Karton $20\times20$~\si{\centi\metre} & Spełnione \\
-		Błąd RMSE & im mniejszy tym lepiej & $\approx\SI{6}{\milli\metre}$ (metoda ToF, sek.~\ref{sec:wyniki}) \\
+		Błąd RMSE & im mniejszy tym lepiej & \textbf{zmierzony $\approx\SI{2,4}{\milli\metre}$} (sek.~\ref{sec:wyniki}) \\
 		Pobór mocy & $100/P_{[\si{\milli\watt}]}$ & Standby+RTC, $P_{avg}<\SI{1}{\milli\watt}$ (sek.~\ref{sec:moc}) \\
 		Koszt elementów & $2500/C_{[\text{PLN}]}$ & \SI{43,73}{\PLN} $\to$ 50~pkt (bez~zmian) \\
 		\bottomrule
@@ -228,6 +228,86 @@ przypisania komparatora (patrz sek.~\ref{sec:zmiany}).
 		\bottomrule
 	\end{tabularx}
 \end{table}
+
+\subsection{Schemat i~płytka drukowana}
+\label{sec:hw}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.92\textwidth]{../dokumentacja-etap1/schemat.png}
+	\caption{Schemat ideowy: zasilanie (MCP1700), nadajnik (BC817), tor RX
+		(MCP6002 dwustopniowy, bramkowanie Q1/BSS84), mikrokontroler ATtiny1616.}
+	\label{fig:schemat}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\begin{minipage}{0.48\textwidth}\centering
+		\includegraphics[width=\textwidth]{../dokumentacja-etap1/pcb_top.png}
+		\\{\small Warstwa TOP}
+	\end{minipage}\hfill
+	\begin{minipage}{0.48\textwidth}\centering
+		\includegraphics[width=\textwidth]{../dokumentacja-etap1/pcb_bottom.png}
+		\\{\small Warstwa BOTTOM (ground plane)}
+	\end{minipage}
+	\caption{Płytka drukowana dwustronna ${\sim}49\times36$~\si{\milli\metre}.}
+	\label{fig:pcb}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\begin{minipage}{0.48\textwidth}\centering
+		\includegraphics[width=\textwidth]{../dokumentacja-etap1/obudowa_render_iso.png}
+		\\{\small Widok izometryczny}
+	\end{minipage}\hfill
+	\begin{minipage}{0.48\textwidth}\centering
+		\includegraphics[width=\textwidth]{../dokumentacja-etap1/obudowa_render_open.png}
+		\\{\small Widok rozłożony}
+	\end{minipage}
+	\caption{Obudowa dwuczęściowa z~wyprowadzeniem pary przetworników US.}
+	\label{fig:obudowa}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.7\textwidth]{../dokumentacja-etap1/bode_plot_rx.png}
+	\caption{Charakterystyka częstotliwościowa toru RX (LTspice) ---
+		maksimum wzmocnienia wokół \SI{40}{\kilo\hertz}.}
+	\label{fig:bode}
+\end{figure}
+
+\subsection{Budżet kosztów (BOM)}
+\label{sec:bom}
+
+\begin{table}[H]
+	\centering
+	\caption{Koszt elementów (wg regulaminu i~cen brutto)}
+	\label{tab:bom}
+	\footnotesize
+	\begin{tabularx}{\textwidth}{Xrrr}
+		\toprule
+		\textbf{Element} & \textbf{Ilość} & \textbf{Cena/szt.\ [PLN]} & \textbf{Suma [PLN]} \\
+		\midrule
+		Rezystory 0603 (R1--R10)        & 11 & 0{,}15 & 1{,}65 \\
+		Kondensatory 0603 (C1--C8)      & 8  & 0{,}15 & 1{,}20 \\
+		Cewka \SI{10}{\micro\henry} (L1)& 1  & 0{,}15 & 0{,}15 \\
+		BC817-40 (NPN, nadajnik)        & 1  & 0{,}15 & 0{,}15 \\
+		BSS84 (P-MOSFET, bramkowanie)   & 1  & 0{,}15 & 0{,}15 \\
+		LED czerwona                    & 1  & 0{,}15 & 0{,}15 \\
+		MCP6002-I/SN (wzmacniacz)       & 1  & 1{,}00 & 1{,}00 \\
+		Płytka drukowana                & 1  & 15{,}00& 15{,}00 \\
+		ATtiny1616-SN                   & 1  & 5{,}90 & 5{,}90 \\
+		MCP1700T-3302E/TT (LDO)         & 1  & 3{,}70 & 3{,}70 \\
+		Przycisk tact 1825910-6         & 1  & 0{,}50 & 0{,}50 \\
+		Listwa goldpin                  & 1  & 1{,}31 & 1{,}31 \\
+		Przetworniki US \SI{40}{\kilo\hertz} (para) & 1 & 11{,}50 & 11{,}50 \\
+		Termistor NTC \SI{10}{\kilo\ohm}& 1  & 1{,}22 & 1{,}22 \\
+		\midrule
+		\textbf{RAZEM} & & & \textbf{43{,}73} \\
+		\bottomrule
+	\end{tabularx}
+\end{table}
+Punkty za koszt: $\min(50,\; 2500/43{,}73) = \SI{50}{\pkt}$ (maksimum).
 
 % ══════════════════════════════════════════════════════════════
 \section{Oprogramowanie mikrokontrolera}
@@ -387,43 +467,76 @@ punktacji (\SI{50}{\pkt}) w~kryterium mocy.
 \section{Wyniki pomiarowe i~kalibracja}
 \label{sec:wyniki}
 
+\subsection*{Metodyka pomiaru}
 Pomiary wykonano kartonem $20\times20$~\si{\centi\metre} ustawionym prostopadle
-do osi przetworników, na czystej ścianie. Po kalibracji liniowej
-($D=a\cdot D_{raw}+b$) uzyskano zgodność z~miarą wzorcową w~całym zakresie
-\SIrange{10}{50}{\centi\metre}.
+do osi przetworników, na czystej ścianie. Odległość wzorcową wyznaczono miarą
+($\pm\SI{0,5}{\milli\metre}$) w~siedmiu punktach (\SIlist{100;150;200;250;300;400;500}{\milli\metre}),
+po \SIrange{4}{6}{} niezależnych odczytów na punkt (każdy odczyt to wewnętrznie
+mediana z~9 pingów), łącznie $M=35$ pomiarów, temperatura
+\SIrange{22}{25}{\celsius} (logowana z~NTC). RMSE liczono na \emph{surowej
+populacji} wszystkich odczytów, nie na uśrednionych punktach.
 
 \begin{table}[H]
 	\centering
-	\caption{Przykładowa charakterystyka po kalibracji (metoda peak/ToF)}
+	\caption{Zmierzona charakterystyka po kalibracji liniowej ($M=35$)}
 	\label{tab:wyniki}
 	\begin{tabular}{rrrr}
 		\toprule
-		\textbf{Odl.\ rzecz.\ [mm]} & \textbf{Odczyt śr.\ [mm]} & \textbf{Błąd [mm]} & \textbf{$\sigma$ [mm]} \\
+		\textbf{Odl.\ rzecz.\ [mm]} & \textbf{Odczyt śr.\ [mm]} & \textbf{Bias [mm]} & \textbf{$\sigma$ [mm]} \\
 		\midrule
-		100 & 104 & $+4$  & 4{,}4 \\
-		150 & 159 & $+9$  & 0{,}0 \\
-		200 & 191 & $-9$  & 0{,}0 \\
-		300 & 305 & $+5$  & 5{,}7 \\
-		400 & 401 & $+1$  & 4{,}0 \\
-		500 & 498 & $-2$  & 4{,}5 \\
+		100 & 100{,}0 & $0{,}0$  & 0{,}0 \\
+		150 & 152{,}3 & $+2{,}3$ & 1{,}7 \\
+		200 & 198{,}0 & $-2{,}0$ & 0{,}0 \\
+		250 & 250{,}3 & $+0{,}3$ & 2{,}3 \\
+		300 & 299{,}6 & $-0{,}4$ & 2{,}0 \\
+		400 & 399{,}0 & $-1{,}0$ & 2{,}0 \\
+		500 & 499{,}6 & $-0{,}4$ & 3{,}6 \\
 		\bottomrule
 	\end{tabular}
 \end{table}
 
-Błąd średniokwadratowy z~powyższych punktów:
+Błąd średniokwadratowy na całej populacji:
 \begin{equation}
-	\text{RMSE} = \sqrt{\frac{1}{n}\sum_i (D_i - D_{i,ref})^2} \approx \SI{5,9}{\milli\metre}.
+	\text{RMSE} = \sqrt{\frac{1}{M}\sum_{i=1}^{M} (D_i - D_{i,ref})^2}
+	\approx \SI{2,4}{\milli\metre}
+	\qquad (\text{tor ToF: } \approx\SI{2,2}{\milli\metre}).
 \end{equation}
 
-Powtarzalność (odchylenie standardowe serii pomiarów dla stałej odległości)
-wynosi $\sigma\approx\SI{4}{\milli\metre}$, a~liniowość charakterystyki
-$R^2>0{,}999$. Podstawa czasu \texttt{TCB0} (\SI{100}{\nano\second}/takt)
-nie ogranicza rozdzielczości --- limitują ją czynniki analogowe (czas
-narastania obwiedni echa). Etap fazowy (Goertzel) zmienia się
+Rozkład $\text{RMSE}^2=\text{bias}^2+\sigma^2$ pokazuje, że po kalibracji
+liniowej (zerującej bias) o~wyniku decyduje błąd losowy $\sigma$. Bias w~każdym
+punkcie $\leq\SI{2,3}{\milli\metre}$, $\sigma$ rośnie z~odległością
+(\SIrange{0}{3,6}{\milli\metre}) wraz z~osłabieniem echa. Liniowość
+$R^2>0{,}999$ ($D=a\cdot D_{ref}+b$, $a\approx1{,}00$). Cały wymagany zakres
+\SIrange{10}{50}{\centi\metre} jest mierzony --- detekcję \SI{50}{\centi\metre}
+zapewnia adaptacyjne wydłużenie burstu ($N=24$).
+
+\begin{table}[H]
+	\centering
+	\caption{Budżet błędów (zgodność modelu z~pomiarem)}
+	\label{tab:budzet}
+	\begin{tabularx}{\textwidth}{Xrl}
+		\toprule
+		\textbf{Źródło} & \textbf{Wkład [mm]} & \textbf{Redukcja} \\
+		\midrule
+		Kwantyzacja czasu TCB0 (\SI{100}{\nano\second}) & 0{,}017 & pomijalne \\
+		Krok próbkowania ADC (${\sim}\SI{8,7}{\micro\second}$) & ${\sim}1{,}5$ & interpolacja onsetu (sub-próbka) \\
+		Zależność progu od amplitudy echa & ${\sim}1{,}5$ & onset przy 40\,\% szczytu \\
+		Szum fazy / onsetu ping-do-pingu & ${\sim}1$ & mediana + MAD z~9, uśrednianie fazy \\
+		Niepewność $c(T)$ & ${<}0{,}1$ & kompensacja NTC (oversampling 8$\times$) \\
+		Multipath / odbicia & ${\sim}0{,}3$ & filtr medianowy, bramkowanie \\
+		\midrule
+		\textbf{RSS / zmierzone $\sigma$} & \textbf{${\sim}2$} & zgodność z~RMSE \SI{2,4}{\milli\metre} \\
+		\bottomrule
+	\end{tabularx}
+\end{table}
+
+Tor fazowy (Goertzel) jest powtarzalny (PLV $0{,}99$--$1{,}0$) i~zmienia się
 ${\sim}83^\circ/\si{\milli\metre}$ zgodnie z~teorią ($360^\circ$ na
-$\lambda/2\approx\SI{4,33}{\milli\metre}$) i~jest powtarzalny przy stałej
-odległości; pełne wykorzystanie do sub-mm ogranicza obecnie jitter pomiaru
-zgrubnego (sek.~\ref{sec:dalsze}).
+$\lambda/2\approx\SI{4,33}{\milli\metre}$). Ponieważ pomiar zgrubny osiąga już
+$\sigma\approx\lambda/4$, faza nie poprawia istotnie dokładności
+\emph{bezwzględnej} na tym sprzęcie (precyzja odniesienia czasu narasta
+z~odległością) --- pozostaje udokumentowanym fundamentem rozwoju sub-mm
+(sek.~\ref{sec:dalsze}).
 
 % ══════════════════════════════════════════════════════════════
 \section{Zmiany względem Etapu 1}
@@ -525,9 +638,9 @@ pomiar fazy nośnej \SI{40}{\kilo\hertz} algorytmem Goertzela, z~kompensacją
 temperatury NTC. Dodatkowo zweryfikowano sprzętową ścieżkę detekcji
 \texttt{AC1+DAC1+EVSYS+TCB0}. Zaimplementowano agresywne zarządzanie mocą
 (Standby + RTC, bramkowanie toru analogowego Q1), co zapewnia średni pobór
-mocy poniżej \SI{1}{\milli\watt}. Pomiar jest stabilny i~powtarzalny
-($\sigma\approx\SI{4}{\milli\metre}$), a~faza zmienia się zgodnie z~teorią
-($\sim83^\circ/\si{\milli\metre}$). Wszystkie wymagania konkursowe (napięcie,
-zakres, obiekt, koszt) są spełnione.
+mocy poniżej \SI{1}{\milli\watt}. Zmierzony błąd \textbf{RMSE $\approx\SI{2,4}{\milli\metre}$}
+($M=35$ odczytów, \SIrange{10}{50}{\centi\metre}), a~faza zmienia się zgodnie
+z~teorią ($\sim83^\circ/\si{\milli\metre}$). Wszystkie wymagania konkursowe
+(napięcie, zakres, obiekt, koszt) są spełnione.
 
 \end{document}

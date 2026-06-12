@@ -37,17 +37,22 @@
 #define USART_BAUD_VAL   ((uint16_t)((64UL * F_CPU) / (16UL * BAUD_RATE)))
 
 /* ----- Measurement tunables ----- */
-#define BURST_N          10         /* fixed burst (250us) */
+#define BURST_N          10         /* near burst (250us): keeps 10 cm reachable */
+#define BURST_N_FAR      24         /* far burst (600us): stronger echo for 50 cm */
+#define FAR_THRESH_MM    280        /* switch to far burst above this coarse distance */
 #define BLANKING_US      300        /* ring-down skip; ~9.5 cm floor */
 #define ECHO_TIMEOUT_MS  4          /* covers ~65 cm */
 #define NSAMP            320        /* echo samples (~2.6 ms window @ ~8 us) */
-#define ECHO_MIN_DEV     8          /* min envelope peak to accept echo (8-bit) */
-#define ONSET_DEV        7          /* first-crossing threshold = echo arrival (8-bit) */
+#define ECHO_MIN_DEV     6          /* min envelope peak to accept echo (8-bit) */
+#define ONSET_DEV        5          /* absolute floor for onset threshold (8-bit) */
+#define ONSET_FRAC       40u        /* onset at this %% of peak (amplitude-normalized) */
 #define ADC_AIN_ECHO     ADC_MUXPOS_AIN9_gc   /* PB4 = ADC0 AIN9 */
 #define F0_HZ            40000.0f   /* burst / echo carrier frequency */
 
 /* ----- Goertzel phase stage ----- */
 #define GOERTZEL_W       48         /* samples in the phase window (centered on peak) */
+#define PHASE_MIN_HITS   3          /* min pings with valid phase to attempt fusion */
+#define PLV_MIN          0.60f      /* phase-lock value [0..1]; below -> trust coarse */
 /* Phase calibration offset [rad]: system/electrical delay. Tune so that a
  * known distance reads correctly (see procedure in docs). Default 0. */
 #define PHI0_RAD         0.0f
@@ -63,9 +68,9 @@
 /* ----- Linear calibration:  D_mm = raw_mm * CAL_A_NUM/CAL_A_DEN + CAL_OFFSET_MM
  * Defaults are neutral (gain 1.000, offset 0). Tune against a ruler:
  * pick two reference distances, solve a and b, update these three values. */
-#define CAL_A_NUM        1000
+#define CAL_A_NUM        989        /* fitted: Dc=1.011*real+3.2 -> real=0.989*raw-72 */
 #define CAL_A_DEN        1000
-#define CAL_OFFSET_MM    (-70)      /* envelope-rise delay (~400us). Verify @2 dist. */
+#define CAL_OFFSET_MM    (-72)      /* envelope-rise + slope correction (fit @10-40cm) */
 
 /* ----- NTC (10k, Beta model), divider: +3V3 -- NTC -- PA5 -- 10k -- GND ----- */
 #define NTC_B            3950
@@ -201,7 +206,10 @@ static uint16_t adc_read(uint8_t mux)
 static int16_t ntc_read_temp_c16(void)
 {
     adc_cfg_ntc();                                /* NTC needs full resolution */
-    uint16_t a = adc_read(ADC_MUXPOS_AIN5_gc);
+    /* 8x oversampling -> ~+1.5 bit, lower temperature noise */
+    uint32_t acc = 0;
+    for (uint8_t k = 0; k < 8; k++) acc += adc_read(ADC_MUXPOS_AIN5_gc);
+    uint16_t a = (uint16_t)(acc / 8);
     if (a == 0)    return T_MIN_DC;
     if (a >= 1023) return T_MAX_DC;
 
@@ -283,133 +291,148 @@ static uint16_t echo_total_ticks;   /* TCB0 ticks spanning NSAMP samples */
 static uint16_t diag_peak;          /* peak |deviation| (8-bit counts) */
 static uint16_t diag_ticks;         /* TCB0 ticks at echo onset */
 
-/* One ping. A MINIMAL loop ADC-samples the echo on PB4 (AIN9) as fast as
- * possible (uniform rate). Onset (echo arrival), envelope peak, and the
- * Goertzel window are derived afterwards. The sample period is recovered
- * from the TCB0 span (start..end), giving an accurate time-of-flight.
- * Returns calibrated mm, or 0xFFFF if no valid echo. */
-static uint16_t measure_once_mm(int16_t t_c_dC, uint8_t n_cycles)
-{
-    int32_t c_x1000 = 331300L + ((int32_t)606 * (int32_t)t_c_dC) / 10L;
+/* per-ping phase phasor (unit vector of the absolute cycle fraction) */
+static float   g_pcos, g_psin;
+static uint8_t g_phase_ok;
 
+/* Goertzel phase of the current echo_raw buffer -> absolute cycle fraction.
+ * Stores the unit phasor (cos,sin) of 2*pi*frac in g_pcos/g_psin so phases from
+ * several pings can be circular-averaged (variance ~1/sqrt(N)). */
+static void compute_phase_phasor(void)
+{
+    g_phase_ok = 0;
+    if (echo_total_ticks == 0 || diag_peak < ECHO_MIN_DEV) return;
+    float ts_us = (float)echo_total_ticks / 10.0f / (float)NSAMP;
+    if (ts_us < 1.0f) return;
+    float omega = 2.0f * (float)M_PI * F0_HZ * ts_us * 1.0e-6f;
+    if (omega < 0.1f || omega > (2.0f*(float)M_PI - 0.1f)) return;
+
+    int32_t wstart = (int32_t)echo_peak_idx - GOERTZEL_W / 2;
+    if (wstart < 0) wstart = 0;
+    if (wstart + GOERTZEL_W > (int32_t)NSAMP) wstart = (int32_t)NSAMP - GOERTZEL_W;
+    if (wstart < 0) return;
+
+    float cw = cosf(omega), sw = sinf(omega), coeff = 2.0f * cw, s1 = 0, s2 = 0;
+    for (uint16_t k = 0; k < GOERTZEL_W; k++) {
+        float x  = (float)((int16_t)echo_raw[wstart + k] - (int16_t)echo_baseline);
+        float s0 = x + coeff * s1 - s2; s2 = s1; s1 = s0;
+    }
+    float re = s1 - s2 * cw, im = s2 * sw;
+    float phase = atan2f(im, re);
+    float period_ticks = (float)echo_total_ticks / (float)NSAMP;
+    float t_ws_us = ((float)echo_start_ticks + (float)wstart * period_ticks) / 10.0f;
+    float cycles  = F0_HZ * t_ws_us * 1.0e-6f
+                  - phase / (2.0f * (float)M_PI)
+                  + PHI0_RAD / (2.0f * (float)M_PI);
+    float frac = cycles - floorf(cycles);
+    float ang  = 2.0f * (float)M_PI * frac;
+    g_pcos = cosf(ang); g_psin = sinf(ang); g_phase_ok = 1;
+}
+
+/* One ping. Minimal tight loop samples the echo; returns the onset time in
+ * TCB0 ticks (0 = no valid echo) and fills the per-ping phase phasor. */
+static uint16_t measure_once_ticks(uint8_t n_cycles)
+{
     adc_cfg_echo();
-    echo_baseline = adc_read(ADC_AIN_ECHO);      /* VG baseline, 8-bit (~208) */
+    echo_baseline = adc_read(ADC_AIN_ECHO);
 
     PORTB.OUTCLR = PIN0_bm;
     TCB0.CNT     = 0;                            /* time reference = burst start */
     tx_burst(n_cycles);
     PORTB.OUTCLR = PIN0_bm;
-
-    _delay_us(BLANKING_US);                      /* skip ring-down */
+    _delay_us(BLANKING_US);
 
     ADC0.MUXPOS = ADC_AIN_ECHO;
     uint16_t start = TCB0.CNT;
-    for (uint16_t i = 0; i < NSAMP; i++) {       /* tight uniform sampling */
+    for (uint16_t i = 0; i < NSAMP; i++) {
         ADC0.INTFLAGS = ADC_RESRDY_bm;
         ADC0.COMMAND  = ADC_STCONV_bm;
         while (!(ADC0.INTFLAGS & ADC_RESRDY_bm)) { }
         echo_raw[i] = (uint8_t)ADC0.RES;
     }
     uint16_t end = TCB0.CNT;
-
-    echo_n           = NSAMP;
-    echo_start_ticks = start;
+    echo_n = NSAMP; echo_start_ticks = start;
     echo_total_ticks = (uint16_t)(end - start);
+    g_phase_ok = 0;
 
-    /* post-process: onset (first crossing) + envelope peak */
-    uint16_t peak_dev = 0, peak_idx = 0, onset_idx = 0;
-    uint8_t  onset_found = 0;
+    /* pass 1: envelope peak */
+    uint16_t peak_dev = 0, peak_idx = 0;
     for (uint16_t i = 0; i < NSAMP; i++) {
         int16_t dev  = (int16_t)echo_raw[i] - (int16_t)echo_baseline;
         int16_t adev = dev < 0 ? -dev : dev;
-        if (!onset_found && adev >= ONSET_DEV) { onset_idx = i; onset_found = 1; }
         if (adev > (int16_t)peak_dev) { peak_dev = (uint16_t)adev; peak_idx = i; }
     }
     echo_peak_idx = peak_idx;
     diag_peak     = peak_dev;
+    if (peak_dev < ECHO_MIN_DEV) { diag_ticks = 0; return 0; }
 
-    if (!onset_found || peak_dev < ECHO_MIN_DEV) { diag_ticks = 0; return 0xFFFFu; }
+    /* pass 2: amplitude-normalized, sub-sample-interpolated onset (rising edge) */
+    int16_t thr = (int16_t)(((uint32_t)peak_dev * ONSET_FRAC) / 100u);
+    if (thr < ONSET_DEV) thr = ONSET_DEV;
+    uint8_t onset_found = 0; float onset_idx_f = 0.0f; int16_t prev_adev = 0;
+    for (uint16_t i = 0; i <= peak_idx; i++) {
+        int16_t dev  = (int16_t)echo_raw[i] - (int16_t)echo_baseline;
+        int16_t adev = dev < 0 ? -dev : dev;
+        if (adev >= thr) {
+            float fr = 0.0f;
+            if (i > 0 && adev > prev_adev)
+                fr = (float)(thr - prev_adev) / (float)(adev - prev_adev);
+            onset_idx_f = (float)(int16_t)(i - 1) + fr;
+            if (onset_idx_f < 0.0f) onset_idx_f = 0.0f;
+            onset_found = 1; break;
+        }
+        prev_adev = adev;
+    }
+    if (!onset_found) { diag_ticks = 0; return 0; }
 
-    /* absolute onset time = start + onset_idx * (period); period = span/NSAMP */
-    uint32_t onset_ticks = (uint32_t)start +
-        ((uint32_t)onset_idx * (uint32_t)echo_total_ticks) / NSAMP;
+    float period = (float)echo_total_ticks / (float)NSAMP;
+    uint32_t onset_ticks = (uint32_t)start + (uint32_t)(onset_idx_f * period + 0.5f);
     diag_ticks = (uint16_t)onset_ticks;
+    if (onset_ticks < MIN_TICKS || onset_ticks > MAX_TICKS) return 0;  /* gate */
 
-    int32_t raw = (int32_t)(((int64_t)c_x1000 * (int64_t)onset_ticks) / 20000000LL);
+    compute_phase_phasor();              /* fill phasor for this ping */
+    return (uint16_t)onset_ticks;
+}
+
+/* Calibrated distance [mm] from a (robustly aggregated) onset tick count. */
+static uint16_t ticks_to_mm(int32_t c_x1000, uint32_t ticks)
+{
+    int32_t raw = (int32_t)(((int64_t)c_x1000 * (int64_t)ticks) / 20000000LL);
     int32_t d   = (raw * CAL_A_NUM) / CAL_A_DEN + CAL_OFFSET_MM;
     if (d < 0)      d = 0;
     if (d > 0xFFFE) d = 0xFFFE;
     return (uint16_t)d;
 }
 
-/* ============================== GOERTZEL / PHASE =================== */
-/* Pulse-Phase fusion: refine the coarse ToF distance using the carrier phase
- * of the echo. Goertzel runs at F0 over a window centered on the envelope
- * peak; the phase pins the distance to a lambda/2 grid (4.3 mm), refining the
- * coarse estimate to sub-millimetre IF coarse error < lambda/4. A consistency
- * check falls back to the coarse value when the phase disagrees.
- *   d_coarse : robust coarse distance [mm] (median of ToF pings)
- *   phase_d10: output, echo phase in deci-degrees (or -3600 if unavailable)
- * Returns the fused distance [mm]. */
-static uint16_t phase_refine_mm(int32_t c_x1000, uint16_t d_coarse,
-                                int16_t *phase_d10)
+/* ============================== PHASE FUSION ====================== */
+/* Fuse the robust coarse distance with the circular-averaged phase across the
+ * series. sumc/sums = accumulated unit phasors; npz = count; plv = phase-lock
+ * value [0..1]. The averaged phase pins distance to the lambda/2 grid; a low
+ * PLV (noisy phase) or a >lambda/4 disagreement falls back to coarse. */
+static uint16_t phase_fuse_mm(int32_t c_x1000, uint16_t d_coarse,
+                              float sumc, float sums, uint8_t npz,
+                              int16_t *phase_d10, uint8_t *plv_pct)
 {
-    *phase_d10 = -3600;
-    if (echo_n < GOERTZEL_W || echo_total_ticks == 0 ||
-        diag_peak < ECHO_MIN_DEV)
-        return d_coarse;
+    *phase_d10 = -3600; *plv_pct = 0;
+    if (npz < PHASE_MIN_HITS) return d_coarse;
 
-    /* sample rate from measured total sampling time */
-    float ts_us = (float)echo_total_ticks / 10.0f / (float)echo_n;  /* us/sample */
-    if (ts_us < 1.0f) return d_coarse;
-    float fs    = 1.0e6f / ts_us;
-    float omega = 2.0f * (float)M_PI * F0_HZ / fs;
-    if (omega < 0.1f || omega > (2.0f*(float)M_PI - 0.1f)) return d_coarse;
+    float mag = sqrtf(sumc*sumc + sums*sums);
+    float plv = mag / (float)npz;                 /* phase-lock value */
+    *plv_pct  = (uint8_t)(plv * 100.0f + 0.5f);
 
-    /* window centered on the envelope peak, clamped to the buffer */
-    int32_t start = (int32_t)echo_peak_idx - GOERTZEL_W / 2;
-    if (start < 0) start = 0;
-    if (start + GOERTZEL_W > (int32_t)echo_n) start = (int32_t)echo_n - GOERTZEL_W;
-    if (start < 0) return d_coarse;
+    float frac = atan2f(sums, sumc) / (2.0f * (float)M_PI);
+    if (frac < 0.0f) frac += 1.0f;                /* [0,1) averaged cycle */
+    *phase_d10 = (int16_t)lroundf(frac * 3600.0f);
 
-    float cw = cosf(omega), sw = sinf(omega), coeff = 2.0f * cw;
-    float s1 = 0.0f, s2 = 0.0f;
-    for (uint16_t k = 0; k < GOERTZEL_W; k++) {
-        float x  = (float)((int16_t)echo_raw[start + k] - (int16_t)echo_baseline);
-        float s0 = x + coeff * s1 - s2;
-        s2 = s1; s1 = s0;
-    }
-    float re = s1 - s2 * cw;
-    float im = s2 * sw;
-    float phase = atan2f(im, re);                       /* carrier phase @ t_ws */
+    if (plv < PLV_MIN) return d_coarse;           /* phase not locked */
 
-    /* Absolute carrier cycles from burst start to the window-start time encode
-     * the round-trip distance: echo(t) = cos(2pi f0 (t - ToF) + phi0), so the
-     * Goertzel phase at t_ws = 2pi f0 (t_ws - ToF) + phi0. Hence
-     *   distance/(lambda/2) = f0*ToF = f0*t_ws + (phi0 - phase)/(2pi).
-     * Including f0*t_ws restores the distance information lost by centering the
-     * window on the (moving) envelope peak. */
-    float period_ticks = (float)echo_total_ticks / (float)NSAMP;
-    float t_ws_us = ((float)echo_start_ticks + (float)start * period_ticks) / 10.0f;
-    float cycles  = F0_HZ * t_ws_us * 1.0e-6f
-                  - phase / (2.0f * (float)M_PI)
-                  + PHI0_RAD / (2.0f * (float)M_PI);
-    float frac    = cycles - floorf(cycles);            /* [0,1) cycle */
-    *phase_d10 = (int16_t)lroundf(frac * 3600.0f);      /* 0..3600 deci-deg */
-
-    /* lambda/2 [mm] = c / (2 f0); c_x1000 = c[m/s]*1000 */
     float lam_half = (float)c_x1000 / (2.0f * F0_HZ);
     float phase_mm = frac * lam_half;
-
-    float nf    = roundf(((float)d_coarse - phase_mm) / lam_half);
-    float dfine = nf * lam_half + phase_mm;
-
-    /* consistency: reject lambda/2 bin jumps */
-    if (fabsf(dfine - (float)d_coarse) > lam_half * 0.5f)
-        dfine = (float)d_coarse;
-
-    if (dfine < 0.0f)       dfine = 0.0f;
-    if (dfine > 65534.0f)   dfine = 65534.0f;
+    float nf       = roundf(((float)d_coarse - phase_mm) / lam_half);
+    float dfine    = nf * lam_half + phase_mm;
+    if (fabsf(dfine - (float)d_coarse) > lam_half * 0.5f) return d_coarse;
+    if (dfine < 0.0f) dfine = 0.0f;
+    if (dfine > 65534.0f) dfine = 65534.0f;
     return (uint16_t)lroundf(dfine);
 }
 
@@ -473,13 +496,25 @@ int main(void)
 
         PORTA.OUTSET = PIN4_bm;                       /* LED on */
 
-        int16_t t_dC = ntc_read_temp_c16();
+        int16_t t_dC    = ntc_read_temp_c16();
+        int32_t c_x1000 = 331300L + ((int32_t)606 * (int32_t)t_dC) / 10L;
 
-        uint16_t samples[MEDIAN_OF_N];
-        uint8_t  valid = 0;
+        /* Adaptive burst: a coarse ping picks burst length. Far / no-echo ->
+         * longer burst (stronger echo); near -> short burst (keeps 10 cm). */
+        uint16_t ct      = measure_once_ticks(BURST_N);
+        uint8_t  n_use   = (ct == 0 || ticks_to_mm(c_x1000, ct) > FAR_THRESH_MM)
+                           ? BURST_N_FAR : BURST_N;
+
+        /* Collect onset ticks + accumulate phase phasors over the series. */
+        uint16_t tk[MEDIAN_OF_N];
+        uint8_t  nv = 0, npz = 0;
+        float    sumc = 0.0f, sums = 0.0f;
         for (uint8_t i = 0; i < MEDIAN_OF_N; i++) {
-            uint16_t d = measure_once_mm(t_dC, BURST_N);
-            if (d != 0xFFFFu) samples[valid++] = d;
+            uint16_t t = measure_once_ticks(n_use);
+            if (t) {
+                tk[nv++] = t;
+                if (g_phase_ok) { sumc += g_pcos; sums += g_psin; npz++; }
+            }
             _delay_ms(15);
         }
 
@@ -487,30 +522,47 @@ int main(void)
         adc_off();
         opamp_off();                                  /* power down front-end */
 
-        /* insertion sort -> median */
-        for (uint8_t i = 1; i < valid; i++) {
-            uint16_t v = samples[i]; int8_t j = i - 1;
-            while (j >= 0 && samples[j] > v) { samples[j+1] = samples[j]; j--; }
-            samples[j+1] = v;
-        }
-
         usart_print("#");
         usart_print_u16(seq);
         usart_putc(' ');
-        if (valid < MIN_VALID_HITS) {
-            usart_print("NO ECHO");
-            usart_print(" T=");
+        if (nv < MIN_VALID_HITS) {
+            usart_print("NO ECHO T=");
             usart_print_temp_dC(t_dC);
             usart_print("C (");
-            usart_print_u16(valid);
+            usart_print_u16(nv);
             usart_print("/");
             usart_print_u16(MEDIAN_OF_N);
             usart_print(")");
         } else {
-            uint16_t d_coarse = samples[valid / 2];
-            int32_t  c_x1000  = 331300L + ((int32_t)606 * (int32_t)t_dC) / 10L;
-            int16_t  ph_d10;
-            uint16_t d_fine   = phase_refine_mm(c_x1000, d_coarse, &ph_d10);
+            /* sort ticks, take median */
+            for (uint8_t i = 1; i < nv; i++) {
+                uint16_t v = tk[i]; int8_t j = i - 1;
+                while (j >= 0 && tk[j] > v) { tk[j+1] = tk[j]; j--; }
+                tk[j+1] = v;
+            }
+            uint16_t med = tk[nv / 2];
+            /* MAD: median absolute deviation -> robust mean of inliers */
+            uint16_t dv[MEDIAN_OF_N];
+            for (uint8_t i = 0; i < nv; i++)
+                dv[i] = tk[i] > med ? tk[i] - med : med - tk[i];
+            for (uint8_t i = 1; i < nv; i++) {
+                uint16_t v = dv[i]; int8_t j = i - 1;
+                while (j >= 0 && dv[j] > v) { dv[j+1] = dv[j]; j--; }
+                dv[j+1] = v;
+            }
+            uint16_t mad = dv[nv / 2];
+            uint16_t lim = (uint16_t)(mad * 3u) + 2u;
+            uint32_t sum = 0; uint8_t cnt = 0;
+            for (uint8_t i = 0; i < nv; i++) {
+                uint16_t d = tk[i] > med ? tk[i] - med : med - tk[i];
+                if (d <= lim) { sum += tk[i]; cnt++; }
+            }
+            uint32_t coarse_ticks = cnt ? (sum / cnt) : med;
+
+            uint16_t d_coarse = ticks_to_mm(c_x1000, coarse_ticks);
+            int16_t  ph_d10; uint8_t plv_pct;
+            uint16_t d_fine = phase_fuse_mm(c_x1000, d_coarse,
+                                            sumc, sums, npz, &ph_d10, &plv_pct);
 
             usart_print("D=");
             usart_print_u16(d_fine);
@@ -520,15 +572,16 @@ int main(void)
             if (ph_d10 == -3600) {
                 usart_print("--");
             } else {
-                if (ph_d10 < 0) { usart_putc('-'); ph_d10 = (int16_t)-ph_d10; }
                 usart_print_u16((uint16_t)(ph_d10 / 10));
                 usart_putc('.');
                 usart_putc((char)('0' + ph_d10 % 10));
             }
+            usart_print(" plv=");
+            usart_print_u16(plv_pct);
             usart_print(" T=");
             usart_print_temp_dC(t_dC);
             usart_print("C ");
-            usart_print_u16(valid);
+            usart_print_u16(nv);
             usart_print("/");
             usart_print_u16(MEDIAN_OF_N);
             usart_print(" pk=");
