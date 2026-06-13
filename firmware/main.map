@@ -1,15 +1,15 @@
 Archive member included to satisfy reference by file (symbol)
 
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(atan2.o)
-                              C:\Users\Kacper\AppData\Local\Temp\cc31qlIg.o (symbol from plugin) (atan2f)
+                              C:\Users\Kacper\AppData\Local\Temp\ccM1OoWO.o (symbol from plugin) (atan2f)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(atan.o)
                               C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(atan2.o) (atanf)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(cos.o)
-                              C:\Users\Kacper\AppData\Local\Temp\cc31qlIg.o (symbol from plugin) (cosf)
+                              C:\Users\Kacper\AppData\Local\Temp\ccM1OoWO.o (symbol from plugin) (cosf)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(divsf3x.o)
                               C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(atan2.o) (__divsf3_pse)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(floor.o)
-                              C:\Users\Kacper\AppData\Local\Temp\cc31qlIg.o (symbol from plugin) (floorf)
+                              C:\Users\Kacper\AppData\Local\Temp\ccM1OoWO.o (symbol from plugin) (floorf)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(fp_inf.o)
                               C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(divsf3x.o) (__fp_inf)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(fp_mintl.o)
@@ -39,17 +39,17 @@ C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(inverse.o)
                               C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(atan.o) (__inversef)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(log.o)
-                              C:\Users\Kacper\AppData\Local\Temp\cc31qlIg.o (symbol from plugin) (logf)
+                              C:\Users\Kacper\AppData\Local\Temp\ccM1OoWO.o (symbol from plugin) (logf)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(lround.o)
-                              C:\Users\Kacper\AppData\Local\Temp\cc31qlIg.o (symbol from plugin) (lroundf)
+                              C:\Users\Kacper\AppData\Local\Temp\ccM1OoWO.o (symbol from plugin) (lroundf)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(mulsf3x.o)
                               C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(atan.o) (__mulsf3x)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(round.o)
-                              C:\Users\Kacper\AppData\Local\Temp\cc31qlIg.o (symbol from plugin) (roundf)
+                              C:\Users\Kacper\AppData\Local\Temp\ccM1OoWO.o (symbol from plugin) (roundf)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(sin.o)
-                              C:\Users\Kacper\AppData\Local\Temp\cc31qlIg.o (symbol from plugin) (sinf)
+                              C:\Users\Kacper\AppData\Local\Temp\ccM1OoWO.o (symbol from plugin) (sinf)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(sqrt.o)
-                              C:\Users\Kacper\AppData\Local\Temp\cc31qlIg.o (symbol from plugin) (sqrtf)
+                              C:\Users\Kacper\AppData\Local\Temp\ccM1OoWO.o (symbol from plugin) (sqrtf)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(square.o)
                               C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(atan.o) (squaref)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(addsf3.o)
@@ -69,9 +69,9 @@ C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_exit.o)
                               C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3/crtattiny1616.o (exit)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libattiny1616.a(eerd_block.o)
-                              C:\Users\Kacper\AppData\Local\Temp\cc31qlIg.o (symbol from plugin) (eeprom_read_block)
+                              C:\Users\Kacper\AppData\Local\Temp\ccM1OoWO.o (symbol from plugin) (eeprom_read_block)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libattiny1616.a(eeupd_block.o)
-                              C:\Users\Kacper\AppData\Local\Temp\cc31qlIg.o (symbol from plugin) (eeprom_update_block)
+                              C:\Users\Kacper\AppData\Local\Temp\ccM1OoWO.o (symbol from plugin) (eeprom_update_block)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libattiny1616.a(eeupd_byte.o)
                               C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libattiny1616.a(eeupd_block.o) (eeprom_update_r18)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libattiny1616.a(eewr_byte.o)
@@ -81,49 +81,49 @@ C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libc.a(memcpy.o)
                               C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libattiny1616.a(eerd_block.o) (memcpy)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(cmpsf2.o)
-                              C:\Users\Kacper\AppData\Local\Temp\ccfxwaTf.ltrans0.ltrans.o (__ltsf2)
+                              C:\Users\Kacper\AppData\Local\Temp\ccwS0NJA.ltrans0.ltrans.o (__ltsf2)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(fixsfsi.o)
-                              C:\Users\Kacper\AppData\Local\Temp\ccfxwaTf.ltrans0.ltrans.o (__fixsfsi)
+                              C:\Users\Kacper\AppData\Local\Temp\ccwS0NJA.ltrans0.ltrans.o (__fixsfsi)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(fixunssfsi.o)
-                              C:\Users\Kacper\AppData\Local\Temp\ccfxwaTf.ltrans0.ltrans.o (__fixunssfsi)
+                              C:\Users\Kacper\AppData\Local\Temp\ccwS0NJA.ltrans0.ltrans.o (__fixunssfsi)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(fp_cmp.o)
                               C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(cmpsf2.o) (__fp_cmp)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(gesf2.o)
-                              C:\Users\Kacper\AppData\Local\Temp\ccfxwaTf.ltrans0.ltrans.o (__gesf2)
+                              C:\Users\Kacper\AppData\Local\Temp\ccwS0NJA.ltrans0.ltrans.o (__gesf2)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_mulhisi3.o)
-                              C:\Users\Kacper\AppData\Local\Temp\ccfxwaTf.ltrans0.ltrans.o (__mulhisi3)
+                              C:\Users\Kacper\AppData\Local\Temp\ccwS0NJA.ltrans0.ltrans.o (__mulhisi3)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_umulhisi3.o)
-                              C:\Users\Kacper\AppData\Local\Temp\ccfxwaTf.ltrans0.ltrans.o (__umulhisi3)
+                              C:\Users\Kacper\AppData\Local\Temp\ccwS0NJA.ltrans0.ltrans.o (__umulhisi3)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_mulsi3.o)
-                              C:\Users\Kacper\AppData\Local\Temp\ccfxwaTf.ltrans0.ltrans.o (__mulsi3)
+                              C:\Users\Kacper\AppData\Local\Temp\ccwS0NJA.ltrans0.ltrans.o (__mulsi3)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_udivmodhi4.o)
-                              C:\Users\Kacper\AppData\Local\Temp\ccfxwaTf.ltrans0.ltrans.o (__udivmodhi4)
+                              C:\Users\Kacper\AppData\Local\Temp\ccwS0NJA.ltrans0.ltrans.o (__udivmodhi4)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_divmodhi4.o)
-                              C:\Users\Kacper\AppData\Local\Temp\ccfxwaTf.ltrans0.ltrans.o (__divmodhi4)
+                              C:\Users\Kacper\AppData\Local\Temp\ccwS0NJA.ltrans0.ltrans.o (__divmodhi4)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_udivmodsi4.o)
-                              C:\Users\Kacper\AppData\Local\Temp\ccfxwaTf.ltrans0.ltrans.o (__udivmodsi4)
+                              C:\Users\Kacper\AppData\Local\Temp\ccwS0NJA.ltrans0.ltrans.o (__udivmodsi4)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_divmodsi4.o)
-                              C:\Users\Kacper\AppData\Local\Temp\ccfxwaTf.ltrans0.ltrans.o (__divmodsi4)
+                              C:\Users\Kacper\AppData\Local\Temp\ccwS0NJA.ltrans0.ltrans.o (__divmodsi4)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_negsi2.o)
                               C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_divmodsi4.o) (__negsi2)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_copy_data.o)
-                              C:\Users\Kacper\AppData\Local\Temp\ccfxwaTf.ltrans0.ltrans.o (__do_copy_data)
+                              C:\Users\Kacper\AppData\Local\Temp\ccwS0NJA.ltrans0.ltrans.o (__do_copy_data)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_clear_bss.o)
-                              C:\Users\Kacper\AppData\Local\Temp\ccfxwaTf.ltrans0.ltrans.o (__do_clear_bss)
+                              C:\Users\Kacper\AppData\Local\Temp\ccwS0NJA.ltrans0.ltrans.o (__do_clear_bss)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_usmulhisi3.o)
-                              C:\Users\Kacper\AppData\Local\Temp\ccfxwaTf.ltrans0.ltrans.o (__usmulhisi3)
+                              C:\Users\Kacper\AppData\Local\Temp\ccwS0NJA.ltrans0.ltrans.o (__usmulhisi3)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_muluhisi3.o)
                               C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_mulsi3.o) (__muluhisi3)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_muldi3.o)
-                              C:\Users\Kacper\AppData\Local\Temp\ccfxwaTf.ltrans0.ltrans.o (__muldi3)
+                              C:\Users\Kacper\AppData\Local\Temp\ccwS0NJA.ltrans0.ltrans.o (__muldi3)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_muldi3_6.o)
                               C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_muldi3.o) (__muldi3_6)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_mulsidi3.o)
-                              C:\Users\Kacper\AppData\Local\Temp\ccfxwaTf.ltrans0.ltrans.o (__mulsidi3)
+                              C:\Users\Kacper\AppData\Local\Temp\ccwS0NJA.ltrans0.ltrans.o (__mulsidi3)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_umulsidi3.o)
                               C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_mulsidi3.o) (__umulsidi3_helper)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_divdi3.o)
-                              C:\Users\Kacper\AppData\Local\Temp\ccfxwaTf.ltrans0.ltrans.o (__divdi3)
+                              C:\Users\Kacper\AppData\Local\Temp\ccwS0NJA.ltrans0.ltrans.o (__divdi3)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_udivdi3.o)
                               C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_divdi3.o) (__udivdi3_umoddi3)
 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a(_udivmod64.o)
@@ -139,9 +139,9 @@ Discarded input sections
 
  .data          0x00000000        0x0 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3/crtattiny1616.o
  .bss           0x00000000        0x0 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3/crtattiny1616.o
- .text          0x00000000        0x0 C:\Users\Kacper\AppData\Local\Temp\ccfxwaTf.ltrans0.ltrans.o
- .data          0x00000000        0x0 C:\Users\Kacper\AppData\Local\Temp\ccfxwaTf.ltrans0.ltrans.o
- .bss           0x00000000        0x0 C:\Users\Kacper\AppData\Local\Temp\ccfxwaTf.ltrans0.ltrans.o
+ .text          0x00000000        0x0 C:\Users\Kacper\AppData\Local\Temp\ccwS0NJA.ltrans0.ltrans.o
+ .data          0x00000000        0x0 C:\Users\Kacper\AppData\Local\Temp\ccwS0NJA.ltrans0.ltrans.o
+ .bss           0x00000000        0x0 C:\Users\Kacper\AppData\Local\Temp\ccwS0NJA.ltrans0.ltrans.o
  .text          0x00000000        0x0 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(atan2.o)
  .data          0x00000000        0x0 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(atan2.o)
  .bss           0x00000000        0x0 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(atan2.o)
@@ -620,8 +620,8 @@ Linker script and memory map
 
 Address of section .data set to 0x803800
 LOAD C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3/crtattiny1616.o
-LOAD C:\Users\Kacper\AppData\Local\Temp\cc31qlIg.o
-LOAD C:\Users\Kacper\AppData\Local\Temp\ccfxwaTf.ltrans0.ltrans.o
+LOAD C:\Users\Kacper\AppData\Local\Temp\ccM1OoWO.o
+LOAD C:\Users\Kacper\AppData\Local\Temp\ccwS0NJA.ltrans0.ltrans.o
 LOAD C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a
 START GROUP
 LOAD C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/avrxmega3\libgcc.a
@@ -821,36 +821,36 @@ END GROUP
                 0x000000ba                        . = ALIGN (0x2)
  *(.text.*)
  .text.usart_putc
-                0x000000ba        0xe C:\Users\Kacper\AppData\Local\Temp\ccfxwaTf.ltrans0.ltrans.o
+                0x000000ba        0xe C:\Users\Kacper\AppData\Local\Temp\ccwS0NJA.ltrans0.ltrans.o
  .text.usart_print
-                0x000000c8       0x1a C:\Users\Kacper\AppData\Local\Temp\ccfxwaTf.ltrans0.ltrans.o
+                0x000000c8       0x1a C:\Users\Kacper\AppData\Local\Temp\ccwS0NJA.ltrans0.ltrans.o
  .text.usart_print_u16
-                0x000000e2       0x82 C:\Users\Kacper\AppData\Local\Temp\ccfxwaTf.ltrans0.ltrans.o
+                0x000000e2       0x82 C:\Users\Kacper\AppData\Local\Temp\ccwS0NJA.ltrans0.ltrans.o
  .text.usart_print_temp_dC
-                0x00000164       0x3a C:\Users\Kacper\AppData\Local\Temp\ccfxwaTf.ltrans0.ltrans.o
+                0x00000164       0x3a C:\Users\Kacper\AppData\Local\Temp\ccwS0NJA.ltrans0.ltrans.o
  .text.adc_read
-                0x0000019e       0x20 C:\Users\Kacper\AppData\Local\Temp\ccfxwaTf.ltrans0.ltrans.o
+                0x0000019e       0x20 C:\Users\Kacper\AppData\Local\Temp\ccwS0NJA.ltrans0.ltrans.o
  .text.cal_crc8
-                0x000001be       0x2e C:\Users\Kacper\AppData\Local\Temp\ccfxwaTf.ltrans0.ltrans.o
+                0x000001be       0x2e C:\Users\Kacper\AppData\Local\Temp\ccwS0NJA.ltrans0.ltrans.o
  .text.button_pressed
-                0x000001ec        0xe C:\Users\Kacper\AppData\Local\Temp\ccfxwaTf.ltrans0.ltrans.o
+                0x000001ec        0xe C:\Users\Kacper\AppData\Local\Temp\ccwS0NJA.ltrans0.ltrans.o
  .text.usart_flush
-                0x000001fa       0x16 C:\Users\Kacper\AppData\Local\Temp\ccfxwaTf.ltrans0.ltrans.o
+                0x000001fa       0x16 C:\Users\Kacper\AppData\Local\Temp\ccwS0NJA.ltrans0.ltrans.o
  .text.wait_press_release
-                0x00000210       0x60 C:\Users\Kacper\AppData\Local\Temp\ccfxwaTf.ltrans0.ltrans.o
+                0x00000210       0x60 C:\Users\Kacper\AppData\Local\Temp\ccwS0NJA.ltrans0.ltrans.o
  .text.cal_blink
-                0x00000270       0x36 C:\Users\Kacper\AppData\Local\Temp\ccfxwaTf.ltrans0.ltrans.o
+                0x00000270       0x36 C:\Users\Kacper\AppData\Local\Temp\ccwS0NJA.ltrans0.ltrans.o
  .text.ntc_read_temp_c16
-                0x000002a6      0x194 C:\Users\Kacper\AppData\Local\Temp\ccfxwaTf.ltrans0.ltrans.o
+                0x000002a6      0x194 C:\Users\Kacper\AppData\Local\Temp\ccwS0NJA.ltrans0.ltrans.o
  .text.measure_once_ticks
-                0x0000043a      0x5b0 C:\Users\Kacper\AppData\Local\Temp\ccfxwaTf.ltrans0.ltrans.o
+                0x0000043a      0x5b0 C:\Users\Kacper\AppData\Local\Temp\ccwS0NJA.ltrans0.ltrans.o
  .text.measure_coarse_ticks
-                0x000009ea      0x2fe C:\Users\Kacper\AppData\Local\Temp\ccfxwaTf.ltrans0.ltrans.o
+                0x000009ea      0x2fe C:\Users\Kacper\AppData\Local\Temp\ccwS0NJA.ltrans0.ltrans.o
  .text.__vector_7
-                0x00000ce8        0xc C:\Users\Kacper\AppData\Local\Temp\ccfxwaTf.ltrans0.ltrans.o
+                0x00000ce8        0xc C:\Users\Kacper\AppData\Local\Temp\ccwS0NJA.ltrans0.ltrans.o
                 0x00000ce8                __vector_7
  .text.startup.main
-                0x00000cf4      0x912 C:\Users\Kacper\AppData\Local\Temp\ccfxwaTf.ltrans0.ltrans.o
+                0x00000cf4      0x912 C:\Users\Kacper\AppData\Local\Temp\ccwS0NJA.ltrans0.ltrans.o
                 0x00000cf4                main
  .text.avr-libc.fplib
                 0x00001606       0x86 C:/Users/Kacper/scoop/apps/avr-gcc/15.2.0/bin/../lib/gcc/avr/15.2.0/../../../../avr/lib/avrxmega3\libm.a(atan2.o)
@@ -1120,7 +1120,7 @@ END GROUP
  *(.rodata)
  *(.rodata*)
  .rodata.main.str1.1
-                0x0000a460      0x15a C:\Users\Kacper\AppData\Local\Temp\ccfxwaTf.ltrans0.ltrans.o
+                0x0000a460      0x15a C:\Users\Kacper\AppData\Local\Temp\ccwS0NJA.ltrans0.ltrans.o
                                 0x161 (size before relaxing)
  *(.gnu.linkonce.r*)
 
@@ -1128,8 +1128,8 @@ END GROUP
                 0x00803800                        PROVIDE (__data_start = .)
  *(.data)
  *(.data*)
- .data.g_cal_b  0x00803800        0x2 C:\Users\Kacper\AppData\Local\Temp\ccfxwaTf.ltrans0.ltrans.o
- .data.g_cal_a  0x00803802        0x2 C:\Users\Kacper\AppData\Local\Temp\ccfxwaTf.ltrans0.ltrans.o
+ .data.g_cal_b  0x00803800        0x2 C:\Users\Kacper\AppData\Local\Temp\ccwS0NJA.ltrans0.ltrans.o
+ .data.g_cal_a  0x00803802        0x2 C:\Users\Kacper\AppData\Local\Temp\ccwS0NJA.ltrans0.ltrans.o
  *(.gnu.linkonce.d*)
                 0x00803804                        . = ALIGN (0x2)
                 0x00803804                        _edata = .
@@ -1139,25 +1139,25 @@ END GROUP
                 0x00803804                        PROVIDE (__bss_start = .)
  *(.bss)
  *(.bss*)
- .bss.g_sums    0x00803804        0x4 C:\Users\Kacper\AppData\Local\Temp\ccfxwaTf.ltrans0.ltrans.o
- .bss.g_sumc    0x00803808        0x4 C:\Users\Kacper\AppData\Local\Temp\ccfxwaTf.ltrans0.ltrans.o
- .bss.g_npz     0x0080380c        0x1 C:\Users\Kacper\AppData\Local\Temp\ccfxwaTf.ltrans0.ltrans.o
- .bss.g_nv      0x0080380d        0x1 C:\Users\Kacper\AppData\Local\Temp\ccfxwaTf.ltrans0.ltrans.o
- .bss.g_psin    0x0080380e        0x4 C:\Users\Kacper\AppData\Local\Temp\ccfxwaTf.ltrans0.ltrans.o
- .bss.g_pcos    0x00803812        0x4 C:\Users\Kacper\AppData\Local\Temp\ccfxwaTf.ltrans0.ltrans.o
+ .bss.g_sums    0x00803804        0x4 C:\Users\Kacper\AppData\Local\Temp\ccwS0NJA.ltrans0.ltrans.o
+ .bss.g_sumc    0x00803808        0x4 C:\Users\Kacper\AppData\Local\Temp\ccwS0NJA.ltrans0.ltrans.o
+ .bss.g_npz     0x0080380c        0x1 C:\Users\Kacper\AppData\Local\Temp\ccwS0NJA.ltrans0.ltrans.o
+ .bss.g_nv      0x0080380d        0x1 C:\Users\Kacper\AppData\Local\Temp\ccwS0NJA.ltrans0.ltrans.o
+ .bss.g_psin    0x0080380e        0x4 C:\Users\Kacper\AppData\Local\Temp\ccwS0NJA.ltrans0.ltrans.o
+ .bss.g_pcos    0x00803812        0x4 C:\Users\Kacper\AppData\Local\Temp\ccwS0NJA.ltrans0.ltrans.o
  .bss.diag_peak
-                0x00803816        0x2 C:\Users\Kacper\AppData\Local\Temp\ccfxwaTf.ltrans0.ltrans.o
+                0x00803816        0x2 C:\Users\Kacper\AppData\Local\Temp\ccwS0NJA.ltrans0.ltrans.o
  .bss.echo_peak_idx
-                0x00803818        0x2 C:\Users\Kacper\AppData\Local\Temp\ccfxwaTf.ltrans0.ltrans.o
+                0x00803818        0x2 C:\Users\Kacper\AppData\Local\Temp\ccwS0NJA.ltrans0.ltrans.o
  .bss.g_phase_ok
-                0x0080381a        0x1 C:\Users\Kacper\AppData\Local\Temp\ccfxwaTf.ltrans0.ltrans.o
+                0x0080381a        0x1 C:\Users\Kacper\AppData\Local\Temp\ccwS0NJA.ltrans0.ltrans.o
  .bss.echo_total_ticks
-                0x0080381b        0x2 C:\Users\Kacper\AppData\Local\Temp\ccfxwaTf.ltrans0.ltrans.o
+                0x0080381b        0x2 C:\Users\Kacper\AppData\Local\Temp\ccwS0NJA.ltrans0.ltrans.o
  .bss.echo_start_ticks
-                0x0080381d        0x2 C:\Users\Kacper\AppData\Local\Temp\ccfxwaTf.ltrans0.ltrans.o
- .bss.echo_raw  0x0080381f      0x140 C:\Users\Kacper\AppData\Local\Temp\ccfxwaTf.ltrans0.ltrans.o
+                0x0080381d        0x2 C:\Users\Kacper\AppData\Local\Temp\ccwS0NJA.ltrans0.ltrans.o
+ .bss.echo_raw  0x0080381f      0x140 C:\Users\Kacper\AppData\Local\Temp\ccwS0NJA.ltrans0.ltrans.o
  .bss.echo_baseline
-                0x0080395f        0x2 C:\Users\Kacper\AppData\Local\Temp\ccfxwaTf.ltrans0.ltrans.o
+                0x0080395f        0x2 C:\Users\Kacper\AppData\Local\Temp\ccwS0NJA.ltrans0.ltrans.o
  *(COMMON)
                 0x00803961                        PROVIDE (__bss_end = .)
                 0x000025ba                        __data_load_start = LOADADDR (.data)
@@ -1174,7 +1174,7 @@ END GROUP
 
 .eeprom         0x00810000        0x7
  *(.eeprom*)
- .eeprom        0x00810000        0x7 C:\Users\Kacper\AppData\Local\Temp\ccfxwaTf.ltrans0.ltrans.o
+ .eeprom        0x00810000        0x7 C:\Users\Kacper\AppData\Local\Temp\ccwS0NJA.ltrans0.ltrans.o
                 0x00810007                        __eeprom_end = .
 
 .fuse
@@ -1209,7 +1209,7 @@ END GROUP
 
 .comment        0x00000000       0x12
  *(.comment)
- .comment       0x00000000       0x12 C:\Users\Kacper\AppData\Local\Temp\ccfxwaTf.ltrans0.ltrans.o
+ .comment       0x00000000       0x12 C:\Users\Kacper\AppData\Local\Temp\ccwS0NJA.ltrans0.ltrans.o
                                  0x13 (size before relaxing)
 
 .note.gnu.avr.deviceinfo
