@@ -1,26 +1,19 @@
 /*
- * ATtiny1616 ultrasonic distance meter — Etap 2 firmware (final).
+ * Bezkontaktowy miernik odleglosci - ATtiny1616, AVR-GCC (bez Arduino).
+ * ToF ultradzwiekowy 40 kHz + docinanie faza (Goertzel) + kompensacja temp NTC.
  *
- * Pinout (as built, after PCB rework moving ECHO PA2 -> PB4):
- *   PA0  UPDI            programming
- *   PA3  BUTTON          input pull-up, active LOW (start measurement)
- *   PA4  LED             output, active HIGH (measurement indicator)
- *   PA5  NTC thermistor  ADC0 AIN5 (temperature compensation)
- *   PA6  GATE Q1 (BSS84) LOW = Q1 ON = op-amp (VDD_AMP) powered
- *   PB0  TX burst        40 kHz software-timed burst -> R1 -> BC817 -> TX xducer
- *   PB2  USART0 TXD      115200 8N1 (result output)
- *   PB4  ECHO            AC1 AINP3 (RX op-amp output -> comparator)
+ * Piny (jak na plytce):
+ *   PA0 UPDI
+ *   PA3 przycisk (pullup, aktywny LOW)
+ *   PA4 LED
+ *   PA5 termistor NTC      -> ADC AIN5
+ *   PA6 gate Q1/BSS84      LOW = wzmacniacz zasilony
+ *   PB0 nadajnik 40 kHz    -> R1 -> BC817
+ *   PB2 USART TX 115200
+ *   PB4 echo z toru RX     -> ADC AIN9 (tez AC1 AINP3)
  *
- * Echo detection (zero CPU latency, fully hardware):
- *   echo -> MCP6002 -> PB4 -> AC1 (vs DAC1 threshold) -> EVSYS ASYNCCH0
- *        -> TCB0 input capture (CAPT). TCB0.CCMP = round-trip time.
- *   NOTE: PB4 = AINP3 on AC1 (positive); on AC0 it is AINN1 (negative),
- *         hence AC1 + DAC1 (AC1 uses DAC1 per datasheet 29.x).
- *   1 tick @ F_CPU = 10 MHz = 100 ns; 16-bit -> max 6.55 ms (~1.12 m).
- *
- * Power: Standby sleep + RTC/PIT periodic wake (125 ms) polling the button.
- *   Op-amp, ADC and AC are powered only during a measurement (~30 ms).
- *   Idle current dominated by RTC ULP osc (~1-3 uA) -> avg power << 2 mW.
+ * 1 takt TCB0 = 100 ns (zegar 10 MHz). Odleglosc z onsetu obwiedni echa,
+ * faze docina Goertzel. W spoczynku Standby + budzenie z RTC/PIT.
  */
 
 #define F_CPU 10000000UL
@@ -38,90 +31,82 @@
 #define BAUD_RATE        115200UL
 #define USART_BAUD_VAL   ((uint16_t)((64UL * F_CPU) / (16UL * BAUD_RATE)))
 
-/* ----- Measurement tunables ----- */
-#define BURST_N          10         /* near burst (250us): keeps 10 cm reachable */
-#define BURST_N_FAR      24         /* far burst (600us): stronger echo for 50 cm */
-#define FAR_THRESH_MM    280        /* switch to far burst above this coarse distance */
-#define BLANKING_US      300        /* ring-down skip; ~9.5 cm floor */
-#define ECHO_TIMEOUT_MS  4          /* covers ~65 cm */
-#define NSAMP            320        /* echo samples (~2.6 ms window @ ~8 us) */
-#define ECHO_MIN_DEV     6          /* min envelope peak to accept echo (8-bit) */
-#define ONSET_DEV        5          /* absolute floor for onset threshold (8-bit) */
-#define ONSET_FRAC       40u        /* onset at this %% of peak (amplitude-normalized) */
-#define ADC_AIN_ECHO     ADC_MUXPOS_AIN9_gc   /* PB4 = ADC0 AIN9 */
-#define F0_HZ            40000.0f   /* burst / echo carrier frequency */
+/* --- parametry pomiaru --- */
+#define BURST_N          10         // krotki burst -> dziala juz od 10 cm
+#define BURST_N_FAR      24         // dluzszy burst = mocniejsze echo na 50 cm
+#define FAR_THRESH_MM    280        // powyzej tego przelacz na dluzszy burst
+#define BLANKING_US      300        // przeczekanie ring-downu (~9.5 cm minimum)
+#define ECHO_TIMEOUT_MS  4          // limit nasluchu (~65 cm)
+#define NSAMP            320         // probek echa w buforze (~2.6 ms)
+#define ECHO_MIN_DEV     6          // min. szczyt obwiedni zeby uznac echo (8-bit)
+#define ONSET_DEV        5          // dolny prog onsetu (8-bit)
+#define ONSET_FRAC       40u        // onset na tylu %% szczytu (niezalezny od amplitudy)
+#define ADC_AIN_ECHO     ADC_MUXPOS_AIN9_gc   // PB4 = ADC AIN9
+#define F0_HZ            40000.0f
 
-/* ----- Goertzel phase stage ----- */
-#define GOERTZEL_W       48         /* samples in the phase window (centered on peak) */
-#define PHASE_MIN_HITS   3          /* min pings with valid phase to attempt fusion */
-#define PLV_MIN          0.60f      /* phase-lock value [0..1]; below -> trust coarse */
-/* Phase calibration offset [rad]: system/electrical delay. Tune so that a
- * known distance reads correctly (see procedure in docs). Default 0. */
-#define PHI0_RAD         0.0f
+/* --- faza (Goertzel) --- */
+#define GOERTZEL_W       48         // szerokosc okna fazy (wokol szczytu)
+#define PHASE_MIN_HITS   3          // min. pingow z faza zeby probowac fuzji
+#define PLV_MIN          0.60f      // ponizej tego faza za zaszumiona -> bierz coarse
+#define PHI0_RAD         0.0f       // offset fazy (opoznienie ukladu), strojony na wzorcu
 #ifndef M_PI
 #define M_PI 3.14159265358979323846f
 #endif
-#define DAC_THRESHOLD    255        /* 2.49V over 2.5V ref, just below VG */
-#define MEDIAN_OF_N      9          /* shots per measurement; median of valid */
-#define MIN_VALID_HITS   2          /* need >= this many valid captures */
-#define MIN_TICKS        3000       /* reject ring-down (<~5 cm) */
-#define MAX_TICKS        40000      /* reject implausible (>~68 cm) */
+#define DAC_THRESHOLD    255        // prog DAC ~2.49 V (tuz pod VG)
+#define MEDIAN_OF_N      9          // tyle strzalow na pomiar, potem mediana
+#define MIN_VALID_HITS   2          // tyle trafien minimum
+#define MIN_TICKS        3000       // odrzuc ring-down (<~5 cm)
+#define MAX_TICKS        40000      // odrzuc bzdury (>~68 cm)
 
-/* ----- Linear calibration:  D_mm = raw_mm * CAL_A_NUM/CAL_A_DEN + CAL_OFFSET_MM
- * Defaults are neutral (gain 1.000, offset 0). Tune against a ruler:
- * pick two reference distances, solve a and b, update these three values. */
-#define CAL_A_NUM        989        /* default slope x1000 (fit @10-40cm) */
+/* --- kalibracja: real = a*raw/1000 + b. Domyslne z dopasowania 10-40 cm. --- */
+#define CAL_A_NUM        989
 #define CAL_A_DEN        1000
-#define CAL_OFFSET_MM    (-72)      /* default offset [mm] */
+#define CAL_OFFSET_MM    (-72)
 
-/* 2-point field calibration stored in EEPROM. real = a*raw_mm + b, with
- * a = (REF2-REF1)/(raw2-raw1), b = REF1 - a*raw1. Reference distances: */
+/* Kalibracja polowa (2 pkt) w EEPROM: a=(REF2-REF1)/(raw2-raw1), b=REF1-a*raw1 */
 #define CAL_REF1_MM      100
 #define CAL_REF2_MM      400
-#define CAL_MAGIC        0x57E2u    /* 'WETI' marker for a valid EEPROM record */
+#define CAL_MAGIC        0x57E2u    // znacznik waznego rekordu w EEPROM
 
-/* ----- NTC (10k, Beta model), divider: +3V3 -- NTC -- PA5 -- 10k -- GND ----- */
+/* --- NTC 10k, model Beta. Dzielnik: +3V3 - NTC - PA5 - 10k - GND --- */
 #define NTC_B            3950
 #define NTC_R25          10000
 #define NTC_R_PULLDOWN   10000
 #define T_MIN_DC         (-200)
 #define T_MAX_DC         (600)
 
-/* ============================== CLOCK ================================= */
+/* ---- zegar ---- */
 static void clock_init(void)
 {
+    // OSC20M / 2 = 10 MHz
     _PROTECTED_WRITE(CLKCTRL.MCLKCTRLB,
-                     CLKCTRL_PDIV_2X_gc | CLKCTRL_PEN_bm);   /* 20M/2 = 10 MHz */
+                     CLKCTRL_PDIV_2X_gc | CLKCTRL_PEN_bm);
 }
 
-/* ============================== GPIO ================================== */
+/* ---- piny ---- */
 static void gpio_init(void)
 {
-    /* PA3 button: pull-up input, polled (no pin interrupt needed). */
+    // przycisk z pullupem, czytany w petli
     PORTA.DIRCLR   = PIN3_bm;
     PORTA.PIN3CTRL = PORT_PULLUPEN_bm;
 
-    /* PA4 LED off */
-    PORTA.DIRSET = PIN4_bm; PORTA.OUTCLR = PIN4_bm;
+    PORTA.DIRSET = PIN4_bm; PORTA.OUTCLR = PIN4_bm;          // LED
 
-    /* PA5 NTC analog input */
+    // PA5 wejscie analogowe NTC
     PORTA.DIRCLR   = PIN5_bm;
     PORTA.PIN5CTRL = PORT_ISC_INPUT_DISABLE_gc;
 
-    /* PA6 GATE Q1: HIGH = Q1 OFF = op-amp unpowered (idle, saves ~1 mA) */
+    // gate Q1: HIGH = wzmacniacz odciety (spoczynek, oszczedza ~1 mA)
     PORTA.DIRSET = PIN6_bm; PORTA.OUTSET = PIN6_bm;
 
-    /* PB0 TX burst output low */
-    PORTB.DIRSET = PIN0_bm; PORTB.OUTCLR = PIN0_bm;
+    PORTB.DIRSET = PIN0_bm; PORTB.OUTCLR = PIN0_bm;          // nadajnik
+    PORTB.DIRSET = PIN2_bm; PORTB.OUTSET = PIN2_bm;          // USART TX
 
-    /* PB2 USART TX idle high */
-    PORTB.DIRSET = PIN2_bm; PORTB.OUTSET = PIN2_bm;
-
-    /* PB4 ECHO analog input to AC1 */
+    // PB4 echo - wejscie analogowe
     PORTB.DIRCLR   = PIN4_bm;
     PORTB.PIN4CTRL = PORT_ISC_INPUT_DISABLE_gc;
 
-    /* All other pins: digital input buffer off (low power, no float current) */
+    // reszta pinow: wylacz bufory wejsc (mniej pradu, brak plywania)
     PORTA.PIN0CTRL = PORT_ISC_INPUT_DISABLE_gc;
     PORTA.PIN1CTRL = PORT_ISC_INPUT_DISABLE_gc;
     PORTA.PIN2CTRL = PORT_ISC_INPUT_DISABLE_gc;
@@ -135,10 +120,10 @@ static void gpio_init(void)
     PORTC.PIN3CTRL = PORT_ISC_INPUT_DISABLE_gc;
 }
 
-static inline void opamp_on(void)  { PORTA.OUTCLR = PIN6_bm; }  /* Q1 ON  */
-static inline void opamp_off(void) { PORTA.OUTSET = PIN6_bm; }  /* Q1 OFF */
+static inline void opamp_on(void)  { PORTA.OUTCLR = PIN6_bm; }  // Q1 on
+static inline void opamp_off(void) { PORTA.OUTSET = PIN6_bm; }  // Q1 off
 
-/* ============================== USART ================================= */
+/* ---- USART ---- */
 static void usart_init(void)
 {
     USART0.BAUD  = USART_BAUD_VAL;
@@ -152,10 +137,8 @@ static void usart_putc(char c)
 }
 static void usart_print(const char *s) { while (*s) usart_putc(*s++); }
 
-/* Wait until the last byte has fully shifted out, then it is safe to sleep.
- * DREIF set => last byte moved from DATA to the shift register; one byte time
- * (~87us @115200) later it is fully on the wire. Delay 150us to be safe. This
- * avoids the TXCIF race (TXCIF is NOT auto-cleared on TXDATA write). */
+// czekaj az ostatni bajt zejdzie z linii - inaczej Standby ucina go w polowie
+// (TXCIF nie jest kasowany przy zapisie TXDATA, wiec prosciej odczekac jeden bajt)
 static void usart_flush(void)
 {
     while (!(USART0.STATUS & USART_DREIF_bm)) { }
@@ -168,7 +151,7 @@ static void usart_print_u16(uint16_t v)
     while (v && i < 5) { b[i++] = '0' + v % 10; v /= 10; }
     while (i--) usart_putc(b[(uint8_t)i]);
 }
-static void usart_print_temp_dC(int16_t t)
+static void usart_print_temp_dC(int16_t t)   // dziesiate stopnia -> "23.4"
 {
     if (t < 0) { usart_putc('-'); t = (int16_t)-t; }
     usart_print_u16((uint16_t)(t / 10));
@@ -176,25 +159,25 @@ static void usart_print_temp_dC(int16_t t)
     usart_putc((char)('0' + t % 10));
 }
 
-/* ============================== ADC ================================= */
+/* ---- ADC ---- */
 static void adc_init(void)
 {
     ADC0.CTRLC    = ADC_PRESC_DIV8_gc | ADC_REFSEL_VDDREF_gc | ADC_SAMPCAP_bm;
     ADC0.CTRLD    = ADC_INITDLY_DLY16_gc;
     ADC0.SAMPCTRL = 0;
-    ADC0.CTRLA    = ADC_RESSEL_10BIT_gc;          /* enabled on demand */
+    ADC0.CTRLA    = ADC_RESSEL_10BIT_gc;          // wlaczany na zadanie
 }
 static inline void adc_on(void)  { ADC0.CTRLA |= ADC_ENABLE_bm; }
 static inline void adc_off(void) { ADC0.CTRLA &= (uint8_t)~ADC_ENABLE_bm; }
 
-/* NTC: accurate 10-bit, DIV8 (in spec), init delay for clean reference. */
+// NTC: dokladne 10-bit, DIV8 (w spec), init delay na ustalenie referencji
 static inline void adc_cfg_ntc(void)
 {
     ADC0.CTRLC = ADC_PRESC_DIV8_gc | ADC_REFSEL_VDDREF_gc | ADC_SAMPCAP_bm;
     ADC0.CTRLD = ADC_INITDLY_DLY16_gc;
     ADC0.CTRLA = (ADC0.CTRLA & ~ADC_RESSEL_bm) | ADC_RESSEL_10BIT_gc;
 }
-/* Echo: fast 8-bit, DIV4, no init delay -> ~3 samples per 40 kHz cycle. */
+// echo: szybkie 8-bit, DIV4 -> ~3 probki na okres 40 kHz
 static inline void adc_cfg_echo(void)
 {
     ADC0.CTRLC = ADC_PRESC_DIV4_gc | ADC_REFSEL_VDDREF_gc | ADC_SAMPCAP_bm;
@@ -213,13 +196,13 @@ static uint16_t adc_read(uint8_t mux)
 
 static int16_t ntc_read_temp_c16(void)
 {
-    adc_on();                                     /* ensure ADC enabled */
-    adc_cfg_ntc();                                /* NTC needs full resolution */
-    /* 8x oversampling -> ~+1.5 bit, lower temperature noise */
+    adc_on();
+    adc_cfg_ntc();
+    // 8x oversampling -> mniej szumu temperatury
     uint32_t acc = 0;
     for (uint8_t k = 0; k < 8; k++) acc += adc_read(ADC_MUXPOS_AIN5_gc);
     uint16_t a = (uint16_t)(acc / 8);
-    if (a == 0)    return T_MIN_DC;
+    if (a == 0)    return T_MIN_DC;             // NTC w powietrzu / brak
     if (a >= 1023) return T_MAX_DC;
 
     float r     = (float)NTC_R_PULLDOWN * (float)(1023 - a) / (float)a;
@@ -232,29 +215,30 @@ static int16_t ntc_read_temp_c16(void)
     return (int16_t)t_dc;
 }
 
-/* ============================== AC1 + DAC1 =========================== */
+/* ---- AC1 + DAC1 (sprzetowa sciezka progowa, zweryfikowana) ----
+ * Uwaga: na PB4 wejscie dodatnie to AINP3 komparatora AC1 (nie AC0!),
+ * a AC1 korzysta z DAC1 - stad DAC1, nie DAC0. */
 static void ac1_dac1_init(void)
 {
-    /* DAC1/AC1 reference 2.5V (must be <= VDD=3.3V). DAC1REFSEL in VREF.CTRLC,
-     * DAC1REFEN in VREF.CTRLB. */
+    // referencja 2.5 V (musi byc <= VDD). DAC1REFSEL -> CTRLC, DAC1REFEN -> CTRLB
     VREF.CTRLC = (VREF.CTRLC & ~VREF_DAC1REFSEL_gm) | VREF_DAC1REFSEL_2V5_gc;
     VREF.CTRLB |= VREF_DAC1REFEN_bm;
 
-    DAC1.DATA  = DAC_THRESHOLD;                    /* ~2.49V threshold */
-    DAC1.CTRLA = DAC_ENABLE_bm;                    /* internal (no pin) */
+    DAC1.DATA  = DAC_THRESHOLD;
+    DAC1.CTRLA = DAC_ENABLE_bm;                    // tylko wewnetrznie
 
-    AC1.MUXCTRLA = AC_MUXPOS_PIN3_gc | AC_MUXNEG_DAC_gc;  /* +PB4, -DAC1 */
+    AC1.MUXCTRLA = AC_MUXPOS_PIN3_gc | AC_MUXNEG_DAC_gc;   // +PB4, -DAC1
     AC1.CTRLA    = AC_ENABLE_bm | AC_HYSMODE_10mV_gc;
 }
 
-/* ============================== EVSYS ================================ */
+/* ---- EVSYS: AC1_OUT -> TCB0 ---- */
 static void evsys_init(void)
 {
-    EVSYS.ASYNCCH0   = EVSYS_ASYNCCH0_AC1_OUT_gc;      /* AC1 output  */
-    EVSYS.ASYNCUSER0 = EVSYS_ASYNCUSER0_ASYNCCH0_gc;   /* -> TCB0     */
+    EVSYS.ASYNCCH0   = EVSYS_ASYNCCH0_AC1_OUT_gc;
+    EVSYS.ASYNCUSER0 = EVSYS_ASYNCUSER0_ASYNCCH0_gc;
 }
 
-/* ============================== TCB0 capture ======================== */
+/* ---- TCB0: input capture + wolnobiezny licznik czasu ---- */
 static void tcb0_init(void)
 {
     TCB0.CTRLB    = TCB_CNTMODE_CAPT_gc;
@@ -265,48 +249,44 @@ static void tcb0_init(void)
     TCB0.CTRLA    = TCB_CLKSEL_CLKDIV1_gc | TCB_ENABLE_bm;
 }
 
-/* ============================== RTC / PIT (wake) ==================== */
-/* Periodic Interrupt Timer wakes the CPU from Standby every ~125 ms to
- * poll the button. RTC clock = internal 32.768 kHz ULP oscillator. */
+/* ---- RTC/PIT: budzi CPU ze Standby co ~125 ms (na sprawdzenie przycisku) ---- */
 static void rtc_pit_init(void)
 {
     while (RTC.STATUS & RTC_CTRLBUSY_bm) { }
-    RTC.CLKSEL = RTC_CLKSEL_INT32K_gc;
+    RTC.CLKSEL = RTC_CLKSEL_INT32K_gc;            // wewnetrzny ULP 32 kHz
     while (RTC.PITSTATUS & RTC_CTRLBUSY_bm) { }
     RTC.PITINTCTRL = RTC_PI_bm;
-    RTC.PITCTRLA   = RTC_PERIOD_CYC4096_gc | RTC_PITEN_bm;  /* 4096/32768 = 125 ms */
+    RTC.PITCTRLA   = RTC_PERIOD_CYC4096_gc | RTC_PITEN_bm;  // 4096/32768 = 125 ms
 }
 ISR(RTC_PIT_vect) { RTC.PITINTFLAGS = RTC_PI_bm; }
 
-/* ============================== TX BURST ============================ */
+/* ---- burst nadajnika ---- */
 static void tx_burst(uint8_t n)
 {
-    /* 12.5 us half-period -> exactly 40.0 kHz (on transducer resonance) */
+    // 12.5 us na polowke -> dokladnie 40.0 kHz (rezonans przetwornika)
     while (n--) {
         PORTB.OUTSET = PIN0_bm; _delay_us(12.5);
         PORTB.OUTCLR = PIN0_bm; _delay_us(12.5);
     }
 }
 
-/* ============================== DISTANCE ============================ */
-/* Raw 8-bit echo samples (filled by a minimal tight loop for max sample rate;
- * onset/peak/Goertzel run afterwards in post-processing). */
+/* ====== POMIAR ====== */
+// surowe probki echa; onset/szczyt/Goertzel liczone juz po nabraniu bufora
 static uint8_t  echo_raw[NSAMP];
-static uint16_t echo_n;             /* = NSAMP */
-static uint16_t echo_peak_idx;      /* index of envelope peak */
-static uint16_t echo_baseline;      /* ADC baseline (VG), 8-bit */
-static uint16_t echo_start_ticks;   /* TCB0 ticks at first sample */
-static uint16_t echo_total_ticks;   /* TCB0 ticks spanning NSAMP samples */
-static uint16_t diag_peak;          /* peak |deviation| (8-bit counts) */
-static uint16_t diag_ticks;         /* TCB0 ticks at echo onset */
+static uint16_t echo_n;
+static uint16_t echo_peak_idx;      // indeks szczytu obwiedni
+static uint16_t echo_baseline;      // poziom spoczynkowy VG (8-bit)
+static uint16_t echo_start_ticks;   // TCB0 przy pierwszej probce
+static uint16_t echo_total_ticks;   // TCB0 na caly bufor
+static uint16_t diag_peak;          // szczyt obwiedni (do diagnostyki)
+static uint16_t diag_ticks;         // czas onsetu w taktach
 
-/* per-ping phase phasor (unit vector of the absolute cycle fraction) */
+// phasor fazy z jednego pingu (wektor jednostkowy ulamka cyklu)
 static float   g_pcos, g_psin;
 static uint8_t g_phase_ok;
 
-/* Goertzel phase of the current echo_raw buffer -> absolute cycle fraction.
- * Stores the unit phasor (cos,sin) of 2*pi*frac in g_pcos/g_psin so phases from
- * several pings can be circular-averaged (variance ~1/sqrt(N)). */
+/* Goertzel na buforze echa -> bezwzgledny ulamek cyklu.
+ * Zapisuje phasor (cos,sin) zeby usrednic faze po pingach (szum ~1/sqrt(N)). */
 static void compute_phase_phasor(void)
 {
     g_phase_ok = 0;
@@ -314,9 +294,9 @@ static void compute_phase_phasor(void)
     float ts_us = (float)echo_total_ticks / 10.0f / (float)NSAMP;
     if (ts_us < 1.0f) return;
     float omega = 2.0f * (float)M_PI * F0_HZ * ts_us * 1.0e-6f;
-    if (omega < 0.1f || omega > (2.0f*(float)M_PI - 0.1f)) return;
+    if (omega < 0.1f || omega > (2.0f*(float)M_PI - 0.1f)) return;  // poza zakresem
 
-    int32_t wstart = (int32_t)echo_peak_idx - GOERTZEL_W / 2;
+    int32_t wstart = (int32_t)echo_peak_idx - GOERTZEL_W / 2;   // okno wokol szczytu
     if (wstart < 0) wstart = 0;
     if (wstart + GOERTZEL_W > (int32_t)NSAMP) wstart = (int32_t)NSAMP - GOERTZEL_W;
     if (wstart < 0) return;
@@ -328,6 +308,7 @@ static void compute_phase_phasor(void)
     }
     float re = s1 - s2 * cw, im = s2 * sw;
     float phase = atan2f(im, re);
+    // czlon f0*t_okna przywraca info o odleglosci (okno jedzie ze szczytem)
     float period_ticks = (float)echo_total_ticks / (float)NSAMP;
     float t_ws_us = ((float)echo_start_ticks + (float)wstart * period_ticks) / 10.0f;
     float cycles  = F0_HZ * t_ws_us * 1.0e-6f
@@ -338,22 +319,22 @@ static void compute_phase_phasor(void)
     g_pcos = cosf(ang); g_psin = sinf(ang); g_phase_ok = 1;
 }
 
-/* One ping. Minimal tight loop samples the echo; returns the onset time in
- * TCB0 ticks (0 = no valid echo) and fills the per-ping phase phasor. */
+/* Jeden ping. Minimalna petla nabiera bufor echa; zwraca czas onsetu w taktach
+ * TCB0 (0 = brak echa) i liczy phasor fazy dla tego pingu. */
 static uint16_t measure_once_ticks(uint8_t n_cycles)
 {
     adc_cfg_echo();
     echo_baseline = adc_read(ADC_AIN_ECHO);
 
     PORTB.OUTCLR = PIN0_bm;
-    TCB0.CNT     = 0;                            /* time reference = burst start */
+    TCB0.CNT     = 0;                            // zero = start burstu
     tx_burst(n_cycles);
     PORTB.OUTCLR = PIN0_bm;
     _delay_us(BLANKING_US);
 
     ADC0.MUXPOS = ADC_AIN_ECHO;
     uint16_t start = TCB0.CNT;
-    for (uint16_t i = 0; i < NSAMP; i++) {
+    for (uint16_t i = 0; i < NSAMP; i++) {       // ciasna, rownomierna petla
         ADC0.INTFLAGS = ADC_RESRDY_bm;
         ADC0.COMMAND  = ADC_STCONV_bm;
         while (!(ADC0.INTFLAGS & ADC_RESRDY_bm)) { }
@@ -364,7 +345,7 @@ static uint16_t measure_once_ticks(uint8_t n_cycles)
     echo_total_ticks = (uint16_t)(end - start);
     g_phase_ok = 0;
 
-    /* pass 1: envelope peak */
+    // krok 1: szczyt obwiedni
     uint16_t peak_dev = 0, peak_idx = 0;
     for (uint16_t i = 0; i < NSAMP; i++) {
         int16_t dev  = (int16_t)echo_raw[i] - (int16_t)echo_baseline;
@@ -375,7 +356,7 @@ static uint16_t measure_once_ticks(uint8_t n_cycles)
     diag_peak     = peak_dev;
     if (peak_dev < ECHO_MIN_DEV) { diag_ticks = 0; return 0; }
 
-    /* pass 2: amplitude-normalized, sub-sample-interpolated onset (rising edge) */
+    // krok 2: onset = prog 40% szczytu (niezalezny od amplitudy), z interpolacja
     int16_t thr = (int16_t)(((uint32_t)peak_dev * ONSET_FRAC) / 100u);
     if (thr < ONSET_DEV) thr = ONSET_DEV;
     uint8_t onset_found = 0; float onset_idx_f = 0.0f; int16_t prev_adev = 0;
@@ -383,7 +364,7 @@ static uint16_t measure_once_ticks(uint8_t n_cycles)
         int16_t dev  = (int16_t)echo_raw[i] - (int16_t)echo_baseline;
         int16_t adev = dev < 0 ? -dev : dev;
         if (adev >= thr) {
-            float fr = 0.0f;
+            float fr = 0.0f;     // interpolacja przejscia progu miedzy probkami
             if (i > 0 && adev > prev_adev)
                 fr = (float)(thr - prev_adev) / (float)(adev - prev_adev);
             onset_idx_f = (float)(int16_t)(i - 1) + fr;
@@ -397,23 +378,23 @@ static uint16_t measure_once_ticks(uint8_t n_cycles)
     float period = (float)echo_total_ticks / (float)NSAMP;
     uint32_t onset_ticks = (uint32_t)start + (uint32_t)(onset_idx_f * period + 0.5f);
     diag_ticks = (uint16_t)onset_ticks;
-    if (onset_ticks < MIN_TICKS || onset_ticks > MAX_TICKS) return 0;  /* gate */
+    if (onset_ticks < MIN_TICKS || onset_ticks > MAX_TICKS) return 0;  // bramka
 
-    compute_phase_phasor();              /* fill phasor for this ping */
+    compute_phase_phasor();
     return (uint16_t)onset_ticks;
 }
 
-/* Active calibration (loaded from EEPROM if valid, else compile defaults). */
-static int16_t g_cal_a = CAL_A_NUM;     /* slope x1000 */
-static int16_t g_cal_b = CAL_OFFSET_MM; /* offset [mm] */
+// aktywna kalibracja (z EEPROM jak wazna, inaczej domyslne)
+static int16_t g_cal_a = CAL_A_NUM;     // nachylenie x1000
+static int16_t g_cal_b = CAL_OFFSET_MM; // offset [mm]
 
-/* Uncalibrated distance [mm] from onset ticks (raw geometric ToF). */
+// surowa odleglosc z taktow (czysta geometria ToF)
 static int32_t ticks_to_raw_mm(int32_t c_x1000, uint32_t ticks)
 {
     return (int32_t)(((int64_t)c_x1000 * (int64_t)ticks) / 20000000LL);
 }
 
-/* Calibrated distance [mm]: real = a*raw + b (a in x1000). */
+// odleglosc po kalibracji: real = a*raw + b
 static uint16_t ticks_to_mm(int32_t c_x1000, uint32_t ticks)
 {
     int32_t raw = ticks_to_raw_mm(c_x1000, ticks);
@@ -423,7 +404,7 @@ static uint16_t ticks_to_mm(int32_t c_x1000, uint32_t ticks)
     return (uint16_t)d;
 }
 
-/* ============================== EEPROM CALIBRATION ================ */
+/* ====== KALIBRACJA W EEPROM ====== */
 typedef struct { uint16_t magic; int16_t a_x1000; int16_t b_mm; uint8_t crc; } cal_t;
 static cal_t EEMEM ee_cal;
 
@@ -439,7 +420,7 @@ static uint8_t cal_crc8(const cal_t *c)
     return crc;
 }
 
-/* Load EEPROM cal into g_cal_a/g_cal_b; keep defaults if record invalid. */
+// wczytaj rekord; jak zly (magic/CRC/zakres) zostaw domyslne
 static void cal_load(void)
 {
     cal_t c;
@@ -459,11 +440,9 @@ static void cal_save(int16_t a_x1000, int16_t b_mm)
     g_cal_a = a_x1000; g_cal_b = b_mm;
 }
 
-/* ============================== PHASE FUSION ====================== */
-/* Fuse the robust coarse distance with the circular-averaged phase across the
- * series. sumc/sums = accumulated unit phasors; npz = count; plv = phase-lock
- * value [0..1]. The averaged phase pins distance to the lambda/2 grid; a low
- * PLV (noisy phase) or a >lambda/4 disagreement falls back to coarse. */
+/* ====== FUZJA FAZY ======
+ * Laczy odleglosc zgrubna z usredniona faza serii (phasory sumc/sums, npz pingow).
+ * Faza dociaga do siatki lambda/2; jak PLV niskie albo rozjazd > lambda/4 -> coarse. */
 static uint16_t phase_fuse_mm(int32_t c_x1000, uint16_t d_coarse,
                               float sumc, float sums, uint8_t npz,
                               int16_t *phase_d10, uint8_t *plv_pct)
@@ -472,18 +451,18 @@ static uint16_t phase_fuse_mm(int32_t c_x1000, uint16_t d_coarse,
     if (npz < PHASE_MIN_HITS) return d_coarse;
 
     float mag = sqrtf(sumc*sumc + sums*sums);
-    float plv = mag / (float)npz;                 /* phase-lock value */
+    float plv = mag / (float)npz;                 // phase-lock value (spojnosc fazy)
     *plv_pct  = (uint8_t)(plv * 100.0f + 0.5f);
 
     float frac = atan2f(sums, sumc) / (2.0f * (float)M_PI);
-    if (frac < 0.0f) frac += 1.0f;                /* [0,1) averaged cycle */
+    if (frac < 0.0f) frac += 1.0f;
     *phase_d10 = (int16_t)lroundf(frac * 3600.0f);
 
-    if (plv < PLV_MIN) return d_coarse;           /* phase not locked */
+    if (plv < PLV_MIN) return d_coarse;           // faza nie zlapana
 
     float lam_half = (float)c_x1000 / (2.0f * F0_HZ);
     float phase_mm = frac * lam_half;
-    float nf       = roundf(((float)d_coarse - phase_mm) / lam_half);
+    float nf       = roundf(((float)d_coarse - phase_mm) / lam_half);  // numer prazka
     float dfine    = nf * lam_half + phase_mm;
     if (fabsf(dfine - (float)d_coarse) > lam_half * 0.5f) return d_coarse;
     if (dfine < 0.0f) dfine = 0.0f;
@@ -491,19 +470,19 @@ static uint16_t phase_fuse_mm(int32_t c_x1000, uint16_t d_coarse,
     return (uint16_t)lroundf(dfine);
 }
 
-/* ============================== SERIES ============================ */
-/* Series-result globals (filled by measure_coarse_ticks). */
-static float    g_sumc, g_sums;
-static uint8_t  g_npz, g_nv;
+/* ====== SERIA POMIAROWA ====== */
+static float    g_sumc, g_sums;     // suma phasorow fazy
+static uint8_t  g_npz, g_nv;        // pingi z faza / wszystkie trafienia
 
-/* Adaptive-burst measurement series with MAD-robust aggregation in the tick
- * domain. Returns robust onset ticks (0 = no echo); fills g_sumc/g_sums/g_npz
- * (phase phasors) and g_nv (valid pings). Powers the analog front-end itself. */
+/* Seria z adaptacyjnym burstem i odpornym usrednianiem (mediana + MAD) na taktach.
+ * Zwraca onset w taktach (0 = brak), wypelnia phasory i licznik trafien.
+ * Sama wlacza/wylacza tor analogowy. */
 static uint32_t measure_coarse_ticks(int32_t c_x1000)
 {
-    opamp_on(); adc_on(); _delay_ms(5);
+    opamp_on(); adc_on(); _delay_ms(5);          // rozruch wzmacniacza
     (void)adc_read(ADC_MUXPOS_AIN5_gc);
 
+    // ping wstepny -> wybor dlugosci burstu
     uint16_t ct    = measure_once_ticks(BURST_N);
     uint8_t  n_use = (ct == 0 || ticks_to_mm(c_x1000, ct) > FAR_THRESH_MM)
                      ? BURST_N_FAR : BURST_N;
@@ -524,11 +503,13 @@ static uint32_t measure_coarse_ticks(int32_t c_x1000)
     g_nv = nv; g_npz = npz; g_sumc = sumc; g_sums = sums;
     if (nv < MIN_VALID_HITS) return 0;
 
+    // sortuj -> mediana
     for (uint8_t i = 1; i < nv; i++) {
         uint16_t v = tk[i]; int8_t j = i - 1;
         while (j >= 0 && tk[j] > v) { tk[j+1] = tk[j]; j--; } tk[j+1] = v;
     }
     uint16_t med = tk[nv / 2];
+    // MAD: mediana odchylen -> srednia z probek mieszczacych sie w 3*MAD
     uint16_t dv[MEDIAN_OF_N];
     for (uint8_t i = 0; i < nv; i++) dv[i] = tk[i] > med ? tk[i]-med : med-tk[i];
     for (uint8_t i = 1; i < nv; i++) {
@@ -544,35 +525,35 @@ static uint32_t measure_coarse_ticks(int32_t c_x1000)
     return cnt ? (sum / cnt) : med;
 }
 
-/* ============================== BUTTON / SLEEP ===================== */
+/* ---- przycisk / uspienie ---- */
 static uint8_t button_pressed(void) { return (PORTA.IN & PIN3_bm) == 0; }
 
-/* Standby until the PIT wakes us (~125 ms) and the button is pressed. */
+// spij w Standby; PIT budzi co ~125 ms, sprawdzamy przycisk
 static void sleep_until_button(void)
 {
     for (;;) {
         set_sleep_mode(SLEEP_MODE_STANDBY);
         sleep_enable();
         sei();
-        sleep_cpu();                 /* wake on PIT */
+        sleep_cpu();
         sleep_disable();
 
         if (button_pressed()) {
-            _delay_ms(20);           /* debounce */
+            _delay_ms(20);           // debounce
             if (button_pressed()) return;
         }
     }
 }
 
-/* ============================== CALIBRATION MODE ================== */
-/* Block (active poll) until a debounced press + release. */
+/* ====== TRYB KALIBRACJI ====== */
+// czekaj (aktywnie) na klik z debounce
 static void wait_press_release(void)
 {
-    while (button_pressed()) _delay_ms(5);          /* wait release first */
+    while (button_pressed()) _delay_ms(5);          // najpierw puszczenie
     _delay_ms(20);
-    while (!button_pressed()) _delay_ms(5);         /* wait press */
+    while (!button_pressed()) _delay_ms(5);         // nacisniecie
     _delay_ms(20);
-    while (button_pressed()) _delay_ms(5);          /* wait release */
+    while (button_pressed()) _delay_ms(5);          // puszczenie
     _delay_ms(20);
 }
 
@@ -582,9 +563,9 @@ static void cal_blink(uint8_t n)
                   PORTA.OUTCLR = PIN4_bm; _delay_ms(120); }
 }
 
-/* 2-point field calibration. Entered by holding the button at power-up.
- * Prompts (USART + LED) to place the target at CAL_REF1_MM then CAL_REF2_MM;
- * fits real = a*raw + b and stores it in EEPROM. */
+/* Kalibracja 2-punktowa - wejscie: trzymaj przycisk przy starcie.
+ * Prowadzi (USART + LED) przez ustawienie celu na 100 i 400 mm, liczy a,b
+ * i zapisuje do EEPROM. */
 static void cal_mode(void)
 {
     int16_t t_dC    = ntc_read_temp_c16();
@@ -622,7 +603,7 @@ static void cal_mode(void)
     cal_blink(5);
 }
 
-/* ============================== MAIN =============================== */
+/* ====== MAIN ====== */
 int main(void)
 {
     clock_init();
@@ -634,7 +615,7 @@ int main(void)
     tcb0_init();
     rtc_pit_init();
 
-    cal_load();                                       /* EEPROM cal or defaults */
+    cal_load();                                       // EEPROM albo domyslne
 
     uint8_t rst = RSTCTRL.RSTFR;
     RSTCTRL.RSTFR = rst;
@@ -645,14 +626,13 @@ int main(void)
                 ? " cal=EEPROM ===\r\n" : " cal=default ===\r\n");
     usart_flush();
 
-    /* Hold the button at power-up to enter field calibration (checked early,
-     * before the startup blink, so a brief hold is enough). */
+    // trzymanie przycisku przy starcie = wejscie w kalibracje (sprawdzane wczesnie)
     if (button_pressed()) {
         _delay_ms(50);
         if (button_pressed()) cal_mode();
     }
 
-    /* Startup blink = ready */
+    // mrugniecie startowe = gotowy
     for (uint8_t i = 0; i < 3; i++) {
         PORTA.OUTSET = PIN4_bm; _delay_ms(150);
         PORTA.OUTCLR = PIN4_bm; _delay_ms(150);
@@ -663,13 +643,13 @@ int main(void)
     for (;;) {
         sleep_until_button();
         seq++;
-        PORTA.OUTSET = PIN4_bm;                        /* LED on */
+        PORTA.OUTSET = PIN4_bm;                        // LED na czas pomiaru
 
         int16_t  t_dC    = ntc_read_temp_c16();
         int32_t  c_x1000 = 331300L + ((int32_t)606 * (int32_t)t_dC) / 10L;
-        uint32_t coarse_ticks = measure_coarse_ticks(c_x1000);  /* powers FE */
+        uint32_t coarse_ticks = measure_coarse_ticks(c_x1000);
 
-        PORTA.OUTCLR = PIN4_bm;                        /* LED off */
+        PORTA.OUTCLR = PIN4_bm;
 
         usart_print("#");
         usart_print_u16(seq);
@@ -713,9 +693,8 @@ int main(void)
             usart_print(")");
         }
         usart_print("\r\n");
-        usart_flush();                    /* drain TX before sleeping (no garble) */
+        usart_flush();
 
-        /* wait for release so one press = one measurement */
-        while (button_pressed()) _delay_ms(10);
+        while (button_pressed()) _delay_ms(10);       // 1 klik = 1 pomiar
     }
 }

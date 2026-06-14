@@ -172,7 +172,7 @@ działa poprawnie.
 		Zakres pomiaru & \SIrange{10}{50}{\centi\metre} & Spełnione; potwierdzone pomiarami \\
 		Wykrywany obiekt & Karton $20\times20$~\si{\centi\metre} & Spełnione \\
 		Błąd RMSE & im mniejszy tym lepiej & \textbf{zmierzony $\approx\SI{2,4}{\milli\metre}$} (sek.~\ref{sec:wyniki}) \\
-		Pobór mocy & $100/P_{[\si{\milli\watt}]}$ & Standby+RTC, $P_{avg}<\SI{1}{\milli\watt}$ (sek.~\ref{sec:moc}) \\
+		Pobór mocy & $100/P_{[\si{\milli\watt}]}$ & zmierzone: spocz.\ \SI{0,9}{\milli\watt} $\to$ 50~pkt (sek.~\ref{sec:moc}) \\
 		Koszt elementów & $2500/C_{[\text{PLN}]}$ & \SI{43,73}{\PLN} $\to$ 50~pkt (bez~zmian) \\
 		\bottomrule
 	\end{tabularx}
@@ -276,6 +276,23 @@ przypisania komparatora (patrz sek.~\ref{sec:zmiany}).
 	\caption{Charakterystyka częstotliwościowa toru RX (LTspice) ---
 		maksimum wzmocnienia wokół \SI{40}{\kilo\hertz}.}
 	\label{fig:bode}
+\end{figure}
+
+\subsection{Zmontowany prototyp}
+\label{sec:proto}
+
+\begin{figure}[H]
+	\centering
+	\begin{minipage}{0.46\textwidth}\centering
+		\includegraphics[height=7.2cm]{foto/plytka_gora.jpg}
+		\\{\small Zmontowana płytka (widok z~góry)}
+	\end{minipage}\hfill
+	\begin{minipage}{0.46\textwidth}\centering
+		\includegraphics[height=7.2cm]{foto/obudowa_front.jpg}
+		\\{\small Urządzenie w~obudowie}
+	\end{minipage}
+	\caption{Zmontowany i~uruchomiony prototyp miernika.}
+	\label{fig:proto}
 \end{figure}
 
 \subsection{Budżet kosztów (BOM)}
@@ -493,25 +510,32 @@ Prototyp realizuje agresywną politykę uśpienia zapowiedzianą w~Etapie~1
 	wyłączone (\texttt{INPUT\_DISABLE}).
 \end{itemize}
 
-W~stanie spoczynku pobór prądu jest zdominowany przez oscylator ULP RTC
-($\sim\SIrange{1}{3}{\micro\ampere}$). Przy typowym użyciu (pomiar na żądanie)
-średni pobór mocy nie przekracza \SI{1}{\milli\watt}, co odpowiada maksymalnej
-punktacji (\SI{50}{\pkt}) w~kryterium mocy.
+Zmierzony pobór w~spoczynku (Standby + RTC, tor analogowy odcięty Q1) wynosi
+\SI{0,18}{\milli\ampere} przy \SI{5}{\volt}, czyli moc spoczynkowa
+$P_{idle}=\SI{0,9}{\milli\watt}$. Pomiar aktywny trwa krótko
+(${\sim}\SI{70}{\milli\second}$), pobierając \SIrange{2}{4,5}{\milli\ampere}.
 
 \begin{table}[H]
 	\centering
-	\caption{Bilans prądowy (zmierzony / szacowany)}
+	\caption{Bilans prądowy (zmierzony multimetrem, \SI{5}{\volt})}
 	\label{tab:prad}
 	\begin{tabularx}{\textwidth}{Xrr}
 		\toprule
-		\textbf{Stan} & \textbf{Prąd} & \textbf{Uwaga} \\
+		\textbf{Stan} & \textbf{Prąd} & \textbf{Moc} \\
 		\midrule
-		Pomiar aktywny (op-amp + MCU + ADC) & $\sim\SI{4,3}{\milli\ampere}$ & zmierzone (\SI{5}{\volt}, INA219) \\
-		Spoczynek bez uśpienia (tylko bramkowanie) & $\sim\SI{3,2}{\milli\ampere}$ & zmierzone \\
-		Spoczynek Standby+RTC & $\sim\SIrange{1}{3}{\micro\ampere}$ & szac.\ (ULP osc + RTC) \\
+		Spoczynek (Standby + RTC, op-amp off) & \SI{0,18}{\milli\ampere} & \SI{0,9}{\milli\watt} \\
+		Pomiar aktywny (op-amp + MCU + ADC) & \SIrange{2}{4,5}{\milli\ampere} & \SIrange{10}{22,5}{\milli\watt} \\
 		\bottomrule
 	\end{tabularx}
 \end{table}
+
+Przy pracy na żądanie (krótki pomiar co kilka sekund) średnia jest zdominowana
+przez spoczynek: np.\ \SI{70}{\milli\second} pomiaru @ \SI{3}{\milli\ampere} co
+\SI{10}{\second} daje $I_{avg}\approx\SI{0,2}{\milli\ampere}$, czyli
+$P_{avg}\approx\SI{1}{\milli\watt}$. Nawet sam pobór spoczynkowy
+($\SI{0,9}{\milli\watt}$) daje
+$P_{pkt}=\min(50,\ 100/0{,}9)=\SI{50}{\pkt}$ --- maksymalną punktację
+w~kryterium mocy.
 
 % ══════════════════════════════════════════════════════════════
 \section{Wyniki pomiarowe i~kalibracja}
