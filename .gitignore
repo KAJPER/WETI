@@ -1,0 +1,26 @@
+# LaTeX
+*.aux
+*.log
+*.out
+*.toc
+*.lof
+*.lot
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+*.bbl
+*.blg
+
+# AVR / build (zostawiamy main.hex jako plik koncowy)
+*.elf
+*.map
+*.lst
+*.o
+
+# LTspice
+*.raw
+*.op.raw
+
+# System
+Thumbs.db
+.DS_Store
