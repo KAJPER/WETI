@@ -74,7 +74,7 @@ fazy, `T` — temperatura, `pk` — amplituda echa.
 ## Sprzęt
 
 ATtiny1616-SN · MCP6002 (wzmacniacz) · MCP1700 (LDO 3,3 V) · BC817 (driver TX) ·
-BSS84 (bramkowanie toru) · NTC 10 kΩ · para przetworników US 40 kHz · PCB 2-warstwowe ~49×36 mm.
+BSS84 (bramkowanie toru) · NTC 10 kΩ · para przetworników US 40 kHz · PCB 2-warstwowe 41 × 54,25 mm.
 
 ## Autor
 

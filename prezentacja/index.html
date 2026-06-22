@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bezkontaktowy miernik odległości — WETI 2026</title>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg:#070a0e; --bg2:#0c1117; --panel:#0f161d; --panel2:#131c25;
+  --line:rgba(45,212,191,.09); --line2:rgba(45,212,191,.16);
+  --cyan:#2dd4bf; --cyan-b:#5eead4; --amber:#ffc15e; --red:#ff7a7a;
+  --txt:#dde6ee; --muted:#74848f; --stroke:rgba(94,234,212,.22);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);}
+
+/* tlo: graticule oscyloskopu + poswiata */
+.bgfx{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(1200px 700px at 78% -10%, rgba(45,212,191,.10), transparent 60%),
+    radial-gradient(900px 600px at 10% 110%, rgba(255,193,94,.06), transparent 60%),
+    linear-gradient(var(--line) 1px, transparent 1px) 0 0/40px 40px,
+    linear-gradient(90deg, var(--line) 1px, transparent 1px) 0 0/40px 40px,
+    var(--bg);
+}
+.bgfx::after{content:"";position:absolute;inset:0;
+  background:radial-gradient(circle at 50% 50%, transparent 60%, rgba(0,0,0,.55));}
+
+.reveal{font-family:"IBM Plex Sans",sans-serif;color:var(--txt);font-weight:400;}
+.reveal .slides{text-align:left;}
+.reveal .slides section{padding:6px 14px;height:100%;}
+.reveal h1,.reveal h2,.reveal h3{font-family:"Chakra Petch",sans-serif;
+  letter-spacing:-.5px;line-height:1.04;margin:0;color:#fff;font-weight:600;text-transform:none;}
+.reveal h1{font-size:2.5em;}
+.reveal h2{font-size:1.9em;}
+.reveal p{line-height:1.45;}
+.mono{font-family:"JetBrains Mono",monospace;}
+.cyan{color:var(--cyan-b)} .amber{color:var(--amber)} .red{color:var(--red)} .muted{color:var(--muted)}
+
+/* kicker / numer slajdu */
+.kicker{font-family:"JetBrains Mono",monospace;font-size:.5em;letter-spacing:3px;
+  text-transform:uppercase;color:var(--cyan);margin:0 0 14px;display:flex;align-items:center;gap:12px;}
+.kicker::before{content:"";width:26px;height:1px;background:var(--cyan);box-shadow:0 0 8px var(--cyan);}
+.kicker .n{color:var(--muted);}
+
+/* uklady */
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:38px;align-items:center;height:100%;}
+.cols.l{grid-template-columns:1.05fr .95fr;}
+.center{display:flex;flex-direction:column;justify-content:center;height:100%;}
+.lead{font-size:1.05em;color:#c4d0da;max-width:18em;}
+
+ul.list{list-style:none;margin:18px 0 0;padding:0;}
+ul.list li{position:relative;padding:9px 0 9px 26px;font-size:.92em;border-bottom:1px solid rgba(255,255,255,.05);}
+ul.list li::before{content:"▸";position:absolute;left:2px;color:var(--cyan);}
+ul.list li b{color:#fff;font-weight:600;}
+
+/* ramki na zdjecia */
+.frame{border:1px solid var(--stroke);border-radius:10px;overflow:hidden;background:var(--panel);
+  box-shadow:0 24px 60px -28px rgba(0,0,0,.9), 0 0 0 1px rgba(0,0,0,.4) inset;position:relative;}
+.frame img{display:block;width:100%;height:100%;object-fit:cover;}
+.frame.contain{background:#0a0f14;}
+.frame.contain img{object-fit:contain;}
+.frame .cap{position:absolute;left:0;bottom:0;right:0;font-family:"JetBrains Mono",monospace;
+  font-size:.42em;letter-spacing:1px;color:var(--cyan-b);padding:8px 12px;
+  background:linear-gradient(transparent,rgba(7,10,14,.92));text-transform:uppercase;}
+.frame .tl{position:absolute;top:9px;left:11px;font-family:"JetBrains Mono",monospace;
+  font-size:.4em;letter-spacing:2px;color:var(--muted);}
+.imgfull{height:78vh;width:100%;}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:8px;}
+.grid3 .frame{height:62vh;}
+
+/* metryki / kafelki */
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:10px;}
+.tile{background:linear-gradient(160deg,var(--panel2),var(--panel));border:1px solid rgba(255,255,255,.06);
+  border-radius:12px;padding:20px 18px;}
+.tile .v{font-family:"JetBrains Mono",monospace;font-size:1.7em;font-weight:700;color:var(--amber);line-height:1;}
+.tile .l{font-size:.46em;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-top:10px;font-family:"JetBrains Mono",monospace;}
+.tile.c .v{color:var(--cyan-b);}
+
+.bignum{font-family:"JetBrains Mono",monospace;font-weight:700;font-size:3.4em;color:var(--amber);line-height:.95;}
+.unit{font-size:.32em;color:var(--muted);letter-spacing:1px;}
+
+/* tabela */
+table.t{border-collapse:collapse;width:100%;font-size:.74em;margin-top:14px;}
+table.t th,table.t td{text-align:left;padding:11px 14px;border-bottom:1px solid rgba(255,255,255,.07);}
+table.t th{font-family:"JetBrains Mono",monospace;font-size:.78em;letter-spacing:1px;
+  text-transform:uppercase;color:var(--muted);font-weight:500;}
+table.t td{font-weight:400;color:#c6d2dc;}
+table.t tr.hl td{background:rgba(45,212,191,.08);color:#fff;}
+table.t tr.hl td:first-child{box-shadow:inset 3px 0 0 var(--cyan);}
+table.t .mono{color:var(--cyan-b);}
+
+/* wzor / kod */
+.formula{font-family:"JetBrains Mono",monospace;background:var(--panel);border:1px solid var(--stroke);
+  border-radius:12px;padding:22px 26px;font-size:1.15em;color:#fff;display:inline-block;
+  box-shadow:0 0 0 1px rgba(0,0,0,.3) inset;}
+.formula .op{color:var(--cyan);} .formula small{color:var(--muted);font-size:.55em;}
+.code{font-family:"JetBrains Mono",monospace;background:#0a1016;border:1px solid var(--stroke);
+  border-radius:12px;padding:18px 20px;font-size:.52em;line-height:1.7;color:#bcd;white-space:pre;overflow:auto;}
+.code .c{color:var(--muted)} .code .k{color:var(--amber)} .code .f{color:var(--cyan-b)}
+
+.chip{display:inline-block;font-family:"JetBrains Mono",monospace;font-size:.5em;letter-spacing:1px;
+  padding:6px 12px;border:1px solid var(--stroke);border-radius:20px;color:var(--cyan-b);margin:4px 6px 0 0;}
+
+/* diagram blokowy */
+.arch{display:flex;align-items:stretch;gap:0;margin-top:26px;}
+.node{flex:1;background:linear-gradient(160deg,var(--panel2),var(--panel));border:1px solid rgba(94,234,212,.18);
+  border-radius:12px;padding:18px 12px;text-align:center;}
+.node .ic{font-size:1.5em}
+.node .nm{font-family:"Chakra Petch";font-weight:600;color:#fff;font-size:.62em;margin-top:8px}
+.node .sub{font-family:"JetBrains Mono";font-size:.4em;color:var(--muted);margin-top:5px;letter-spacing:1px}
+.arrow{display:flex;align-items:center;color:var(--cyan);font-size:1.1em;padding:0 8px;}
+
+/* callout */
+.note{border-left:2px solid var(--amber);background:rgba(255,193,94,.06);padding:14px 18px;border-radius:0 10px 10px 0;
+  font-size:.8em;color:#d8e0e8;margin-top:18px;}
+.note b{color:var(--amber)}
+
+/* tytulowy */
+.hero-meta{font-family:"JetBrains Mono",monospace;font-size:.5em;letter-spacing:2px;color:var(--muted);margin-top:26px;line-height:2;}
+.hero-meta b{color:var(--cyan-b);font-weight:500;}
+.wave{margin-top:24px}
+
+/* animacja wejscia */
+@keyframes up{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.reveal section.present .stagger>*{animation:up .6s cubic-bezier(.2,.75,.2,1) both;}
+.reveal section.present .stagger>*:nth-child(1){animation-delay:.05s}
+.reveal section.present .stagger>*:nth-child(2){animation-delay:.13s}
+.reveal section.present .stagger>*:nth-child(3){animation-delay:.21s}
+.reveal section.present .stagger>*:nth-child(4){animation-delay:.29s}
+.reveal section.present .stagger>*:nth-child(5){animation-delay:.37s}
+.reveal section.present .stagger>*:nth-child(6){animation-delay:.45s}
+.reveal section.present .stagger>*:nth-child(7){animation-delay:.53s}
+.reveal section.present .stagger>*:nth-child(8){animation-delay:.61s}
+
+/* numer slajdu / pasek */
+.reveal .slide-number{font-family:"JetBrains Mono",monospace;background:transparent;color:var(--muted);font-size:13px;}
+.reveal .progress{color:var(--cyan);height:3px;}
+.footer{position:fixed;left:22px;bottom:16px;z-index:30;font-family:"JetBrains Mono",monospace;
+  font-size:11px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;}
+.footer b{color:var(--cyan)}
+</style>
+</head>
+<body>
+<div class="bgfx"></div>
+<div class="footer">WETI&nbsp;2026 · <b>K.&nbsp;POPKO</b></div>
+
+<div class="reveal"><div class="slides">
+
+<!-- 1. TYTUL -->
+<section data-auto-animate>
+  <div class="cols l">
+    <div class="center stagger">
+      <div class="kicker">Wygraj Indeks WETI 2026 · PG</div>
+      <h1>Bezkontaktowy<br>miernik odległości</h1>
+      <p class="lead" style="margin-top:18px">Ultradźwiękowy pomiar czasu przelotu (40&nbsp;kHz)
+         z&nbsp;docinaniem fazą i&nbsp;kompensacją temperatury — na jednym ATtiny1616.</p>
+      <svg class="wave" width="360" height="46" viewBox="0 0 360 46" fill="none">
+        <path d="M0 23 H70 l10 -16 l12 32 l12 -28 l12 24 l10 -12 H140
+                 q40 0 60 -8 q30 -12 40 14 q12 22 24 0 q14 -26 26 0 q10 18 20 6 H360"
+              stroke="#2dd4bf" stroke-width="2" opacity=".9"/>
+      </svg>
+      <div class="hero-meta">
+        AUTOR &nbsp;<b>Kacper Popko</b><br>
+        OPIEKUN &nbsp;<b>Mateusz Karanowski</b><br>
+        MCU &nbsp;<b>ATtiny1616 · AVR-GCC (bez Arduino)</b>
+      </div>
+    </div>
+    <div class="frame" style="height:80vh">
+      <span class="tl">PROTOTYP</span>
+      <img src="img/obudowa_front.jpg" alt="Prototyp w obudowie">
+      <span class="cap">Zmontowane urządzenie w obudowie</span>
+    </div>
+  </div>
+</section>
+
+<!-- 2. CEL -->
+<section>
+  <div class="cols">
+    <div class="center stagger">
+      <div class="kicker"><span class="n">01</span> Cel projektu</div>
+      <h2>Co miało powstać</h2>
+      <ul class="list">
+        <li>Zasilanie <b>5 V</b>, zakres pomiaru <b>10–50 cm</b></li>
+        <li>Wykrywany obiekt: <b>karton 20×20 cm</b></li>
+        <li>Oceniane: <b>błąd RMSE</b>, <b>pobór mocy</b>, <b>koszt</b>, jakość</li>
+        <li>Konkurs „Wygraj Indeks WETI 2026", Politechnika Gdańska</li>
+      </ul>
+    </div>
+    <div class="frame" style="height:74vh">
+      <span class="tl">PRZETWORNIKI US 40 kHz</span>
+      <img src="img/przetworniki_front.jpg" alt="Przetworniki ultradźwiękowe">
+      <span class="cap">Para przetworników: nadajnik + odbiornik</span>
+    </div>
+  </div>
+</section>
+
+<!-- 3. METODA -->
+<section>
+  <div class="center stagger">
+    <div class="kicker"><span class="n">02</span> Wybór metody</div>
+    <h2>Dlaczego <span class="cyan">Pulse-Phase Ranging</span></h2>
+    <table class="t">
+      <tr><th>Metoda</th><th>RMSE</th><th>Koszt</th><th>Uwaga</th></tr>
+      <tr><td>Prosty ToF (US)</td><td class="mono">~3 mm</td><td>niski</td><td>ograniczony obwiednią</td></tr>
+      <tr class="hl"><td>Pulse-Phase (US) ★</td><td class="mono">~0,5 mm</td><td>niski</td><td>ToF + faza — wybrany kompromis</td></tr>
+      <tr><td>FMCW chirp</td><td class="mono">&lt;0,5 mm</td><td>średni</td><td>za duże zasoby na ATtiny</td></tr>
+      <tr><td>Triangulacja optyczna</td><td class="mono">~1 mm</td><td>średni</td><td>wrażliwa na światło</td></tr>
+    </table>
+    <div class="note"><b>Wybór:</b> tanie przetworniki rezonansowe, dokładność sub-mm w zasięgu ATtiny1616, odporność na kolor i oświetlenie obiektu.</div>
+  </div>
+</section>
+
+<!-- 4. ZASADA -->
+<section>
+  <div class="center stagger" style="align-items:flex-start">
+    <div class="kicker"><span class="n">03</span> Zasada fizyczna</div>
+    <h2>Echo, czas, odległość</h2>
+    <div style="display:flex;gap:34px;align-items:center;margin-top:26px;flex-wrap:wrap">
+      <div class="formula">D <span class="op">=</span> c · t <span class="op">/</span> 2<br>
+        <small>droga tam i z powrotem → dzielimy przez 2</small></div>
+      <div class="formula">c(T) <span class="op">=</span> 331,3 <span class="op">+</span> 0,606 · T<br>
+        <small>prędkość dźwięku zależy od temperatury → NTC</small></div>
+    </div>
+    <ul class="list" style="max-width:30em">
+      <li>Burst <b>40 kHz</b> wychodzi z nadajnika, odbija się od obiektu i wraca</li>
+      <li>Mierzymy czas <b>t</b> licznikiem TCB0 (takt <b>100 ns</b>)</li>
+      <li>Termistor NTC koryguje prędkość dźwięku (~0,17%/°C)</li>
+    </ul>
+  </div>
+</section>
+
+<!-- 5. ARCHITEKTURA -->
+<section>
+  <div class="center stagger">
+    <div class="kicker"><span class="n">04</span> Architektura</div>
+    <h2>Tor sygnałowy</h2>
+    <div class="arch">
+      <div class="node"><div class="ic">🔋</div><div class="nm">Zasilanie</div><div class="sub">5V → 3,3V MCP1700</div></div>
+      <div class="arrow">▶</div>
+      <div class="node"><div class="ic">📡</div><div class="nm">Nadajnik</div><div class="sub">BC817 · 40 kHz</div></div>
+      <div class="arrow">))) </div>
+      <div class="node"><div class="ic">🎯</div><div class="nm">Obiekt</div><div class="sub">karton 20×20</div></div>
+      <div class="arrow"> (((</div>
+      <div class="node"><div class="ic">🔊</div><div class="nm">Odbiornik</div><div class="sub">MCP6002 RX</div></div>
+      <div class="arrow">▶</div>
+      <div class="node"><div class="ic">🧠</div><div class="nm">ATtiny1616</div><div class="sub">ToF + faza</div></div>
+    </div>
+    <div class="note" style="margin-top:34px">Mikrokontroler steruje burstem, próbkuje echo, liczy czas i fazę,
+       koryguje temperaturę i wysyła wynik przez USART.</div>
+  </div>
+</section>
+
+<!-- 6. SCHEMAT -->
+<section>
+  <div class="center stagger">
+    <div class="kicker"><span class="n">05</span> Sprzęt · schemat</div>
+    <h2 style="margin-bottom:14px">Schemat ideowy</h2>
+    <div class="frame contain imgfull">
+      <span class="tl">EAGLE · SCHEMAT</span>
+      <img src="img/schemat.png" alt="Schemat">
+      <span class="cap">Zasilanie · nadajnik (BC817) · tor RX (MCP6002 + bramkowanie Q1/BSS84) · ATtiny1616</span>
+    </div>
+  </div>
+</section>
+
+<!-- 7. PCB -->
+<section>
+  <div class="center stagger">
+    <div class="kicker"><span class="n">06</span> PCB i prototyp</div>
+    <h2>Płytka dwuwarstwowa 41 × 54,25 mm</h2>
+    <div class="grid3">
+      <div class="frame contain"><span class="tl">TOP</span><img src="img/pcb_top.png" alt="PCB top"><span class="cap">Warstwa sygnałowa</span></div>
+      <div class="frame contain"><span class="tl">BOTTOM</span><img src="img/pcb_bottom.png" alt="PCB bottom"><span class="cap">Ground plane</span></div>
+      <div class="frame"><span class="tl">PROTOTYP</span><img src="img/plytka_gora.jpg" alt="Zmontowana płytka"><span class="cap">Zmontowana płytka</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- 8. TOR RX -->
+<section>
+  <div class="cols">
+    <div class="center stagger">
+      <div class="kicker"><span class="n">07</span> Tor analogowy RX</div>
+      <h2>Wzmacniacz <span class="cyan">MCP6002</span></h2>
+      <ul class="list">
+        <li>Dwa stopnie: wzmocnienie <b>~10×</b></li>
+        <li>Filtr pasmowy skupiony na <b>40 kHz</b></li>
+        <li>Odcina szum i echa poza pasmem</li>
+        <li>Zasilanie bramkowane P-MOSFET-em (oszczędność energii)</li>
+      </ul>
+    </div>
+    <div class="frame contain" style="height:70vh">
+      <span class="tl">LTSPICE · BODE</span>
+      <img src="img/bode_plot_rx.png" alt="Charakterystyka Bode">
+      <span class="cap">Maksimum wzmocnienia wokół 40 kHz</span>
+    </div>
+  </div>
+</section>
+
+<!-- 9. ToF -->
+<section>
+  <div class="cols">
+    <div class="center stagger">
+      <div class="kicker"><span class="n">08</span> Pomiar · czas przelotu</div>
+      <h2>Detekcja echa — <span class="cyan">onset</span></h2>
+      <ul class="list">
+        <li>Onset = <b>40% szczytu</b> obwiedni → niezależny od amplitudy</li>
+        <li>Interpolacja sub-próbkowa przejścia progu</li>
+        <li>Czas mierzony <b>TCB0</b> (100 ns/takt)</li>
+        <li>Seria <b>9 strzałów</b> → mediana + odrzucanie outlierów (MAD)</li>
+      </ul>
+      <div class="note">To ścięło błąd losowy z ~4 mm do ~1,5 mm.</div>
+    </div>
+    <div class="frame contain" style="height:70vh">
+      <span class="tl">SYMULACJA · ECHO Vout</span>
+      <img src="img/transient_vout.png" alt="Sygnał echa">
+      <span class="cap">Obwiednia echa — onset wyznacza czas przelotu</span>
+    </div>
+  </div>
+</section>
+
+<!-- 10. FAZA -->
+<section>
+  <div class="center stagger" style="align-items:flex-start">
+    <div class="kicker"><span class="n">09</span> Pomiar · faza</div>
+    <h2>Filtr <span class="cyan">Goertzela</span> — docinanie fazą</h2>
+    <div style="display:flex;gap:30px;align-items:center;margin-top:20px;flex-wrap:wrap">
+      <div class="code"><span class="c">// Goertzel @ 40 kHz na buforze echa -> faza nosnej</span>
+<span class="k">float</span> cw=<span class="f">cosf</span>(w), coeff=2*cw, s1=0, s2=0;
+<span class="k">for</span> (k=0; k&lt;W; k++) {
+    <span class="k">float</span> x  = echo[k] - baseline;
+    <span class="k">float</span> s0 = x + coeff*s1 - s2;
+    s2 = s1; s1 = s0;
+}
+phase = <span class="f">atan2f</span>(s2*<span class="f">sinf</span>(w), s1 - s2*cw);</div>
+      <div style="max-width:11em">
+        <div class="bignum">83<span class="unit">°/mm</span></div>
+        <div class="muted mono" style="font-size:.5em;letter-spacing:1px;margin-top:10px">FAZA ZMIENIA SIĘ LINIOWO Z ODLEGŁOŚCIĄ</div>
+      </div>
+    </div>
+    <ul class="list" style="max-width:34em">
+      <li>Liczę <b>jeden prążek</b> DFT (taniej niż całe FFT — znam częstotliwość)</li>
+      <li>Faza docina wynik do siatki <b>λ/2 ≈ 4,3 mm</b>; numer prążka z ToF</li>
+      <li>Uśredniana po pingach + miara spójności <b>PLV</b></li>
+    </ul>
+  </div>
+</section>
+
+<!-- 11. MOC -->
+<section>
+  <div class="cols">
+    <div class="center stagger">
+      <div class="kicker"><span class="n">10</span> Zarządzanie mocą</div>
+      <h2>Spoczynek <span class="amber">0,9 mW</span></h2>
+      <ul class="list">
+        <li>Tryb <b>Standby</b> + budzenie z RTC co 125 ms</li>
+        <li>Wzmacniacz odcinany <b>P-MOSFET-em</b> (Q1) → 0 µA w spoczynku</li>
+        <li>ADC i peryferia włączane tylko na czas pomiaru</li>
+      </ul>
+      <table class="t">
+        <tr><th>Stan</th><th>Prąd @ 5V</th><th>Moc</th></tr>
+        <tr><td>Spoczynek</td><td class="mono">0,18 mA</td><td class="mono">0,9 mW</td></tr>
+        <tr><td>Pomiar (~70 ms)</td><td class="mono">2–4,5 mA</td><td class="mono">10–22 mW</td></tr>
+      </table>
+    </div>
+    <div class="center" style="align-items:center;text-align:center">
+      <div class="bignum" style="font-size:5em">0,9<span class="unit"> mW</span></div>
+      <div class="chip">→ MAKSYMALNE 50 pkt za moc</div>
+    </div>
+  </div>
+</section>
+
+<!-- 12. WYNIKI -->
+<section>
+  <div class="center stagger">
+    <div class="kicker"><span class="n">11</span> Wyniki pomiarowe</div>
+    <h2>Zmierzony błąd <span class="amber">RMSE ≈ 2,4 mm</span></h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr 200px;gap:26px;align-items:center;margin-top:14px">
+      <!-- charakterystyka -->
+      <div>
+        <div class="mono muted" style="font-size:.42em;letter-spacing:2px;margin-bottom:6px">ODCZYT vs RZECZYWISTA [mm]</div>
+        <svg viewBox="0 0 320 270" width="100%">
+          <rect x="0" y="0" width="320" height="270" fill="#0a1016" stroke="rgba(94,234,212,.18)" rx="8"/>
+          <g stroke="rgba(255,255,255,.06)">
+            <line x1="70" y1="30" x2="70" y2="250"/><line x1="70" y1="250" x2="290" y2="250"/>
+          </g>
+          <line x1="80" y1="240" x2="280" y2="40" stroke="#ffc15e" stroke-dasharray="4 4" stroke-width="1.5" opacity=".7"/>
+          <g fill="#2dd4bf">
+            <circle cx="80" cy="240" r="4"/><circle cx="105" cy="214" r="4"/><circle cx="130" cy="191" r="4"/>
+            <circle cx="155" cy="165" r="4"/><circle cx="180" cy="140" r="4"/><circle cx="230" cy="90" r="4"/>
+            <circle cx="280" cy="40" r="4"/>
+          </g>
+          <text x="80" y="265" fill="#74848f" font-family="JetBrains Mono" font-size="9">100</text>
+          <text x="262" y="265" fill="#74848f" font-family="JetBrains Mono" font-size="9">500</text>
+          <text x="200" y="232" fill="#ffc15e" font-family="JetBrains Mono" font-size="9">idealna y=x</text>
+        </svg>
+      </div>
+      <!-- residua -->
+      <div>
+        <div class="mono muted" style="font-size:.42em;letter-spacing:2px;margin-bottom:6px">RESIDUUM D−Dref [mm]</div>
+        <svg viewBox="0 0 320 270" width="100%">
+          <rect x="0" y="0" width="320" height="270" fill="#0a1016" stroke="rgba(94,234,212,.18)" rx="8"/>
+          <line x1="40" y1="135" x2="300" y2="135" stroke="rgba(255,255,255,.25)"/>
+          <line x1="40" y1="97" x2="300" y2="97" stroke="#ff7a7a" stroke-dasharray="4 4" opacity=".6"/>
+          <line x1="40" y1="173" x2="300" y2="173" stroke="#ff7a7a" stroke-dasharray="4 4" opacity=".6"/>
+          <g fill="#2dd4bf">
+            <rect x="52"  y="135" width="20" height="0.5"/>
+            <rect x="88"  y="98"  width="20" height="37"/>
+            <rect x="124" y="135" width="20" height="32"/>
+            <rect x="160" y="130" width="20" height="5"/>
+            <rect x="196" y="135" width="20" height="6"/>
+            <rect x="232" y="135" width="20" height="16"/>
+            <rect x="268" y="135" width="20" height="6"/>
+          </g>
+          <text x="240" y="92" fill="#ff7a7a" font-family="JetBrains Mono" font-size="9">±RMSE</text>
+          <text x="48" y="265" fill="#74848f" font-family="JetBrains Mono" font-size="9">100…500 mm</text>
+        </svg>
+      </div>
+      <div style="text-align:center">
+        <div class="bignum">2,4<span class="unit"> mm</span></div>
+        <div class="mono muted" style="font-size:.46em;letter-spacing:1px;margin-top:12px">RMSE · 35 ODCZYTÓW<br>R² &gt; 0,999</div>
+      </div>
+    </div>
+    <div class="note">Cały zakres 10–50 cm mierzony; detekcję 50 cm zapewnia adaptacyjne wydłużenie burstu (N=24).</div>
+  </div>
+</section>
+
+<!-- 13. WYZWANIA -->
+<section>
+  <div class="cols">
+    <div class="center stagger">
+      <div class="kicker"><span class="n">12</span> Wyzwania</div>
+      <h2>Czego się nauczyłem</h2>
+      <ul class="list">
+        <li><b>Bug AC0→AC1:</b> pin PB4 to dla AC0 wejście <b>ujemne</b>; dodatnie (AINP3) dopiero dla <b>AC1</b> → DAC1. Po korekcie ruszył sprzętowy capture.</li>
+        <li><b>Słabe echo na 50 cm</b> → adaptacyjne wydłużenie burstu (N=24).</li>
+        <li><b>Uczciwie:</b> sub-mm ogranicza jitter zgrubny &lt; λ/4 — pokazuję zmierzone 2,4 mm, nie deklarowane 0,5 mm.</li>
+      </ul>
+    </div>
+    <div class="frame" style="height:72vh">
+      <span class="tl">DEBUG · PROTOTYP</span>
+      <img src="img/plytka_gora_kat.jpg" alt="Płytka">
+      <span class="cap">Uruchamianie i strojenie na stanowisku</span>
+    </div>
+  </div>
+</section>
+
+<!-- 14. PODSUMOWANIE -->
+<section>
+  <div class="center stagger">
+    <div class="kicker"><span class="n">13</span> Podsumowanie</div>
+    <h2>Wszystkie wymagania — <span class="cyan">spełnione i zmierzone</span></h2>
+    <div class="tiles">
+      <div class="tile c"><div class="v">10–50<span style="font-size:.4em"> cm</span></div><div class="l">Zakres</div></div>
+      <div class="tile"><div class="v">2,4<span style="font-size:.4em"> mm</span></div><div class="l">Błąd RMSE</div></div>
+      <div class="tile"><div class="v">0,9<span style="font-size:.4em"> mW</span></div><div class="l">Pobór mocy</div></div>
+      <div class="tile c"><div class="v">43,73<span style="font-size:.4em"> zł</span></div><div class="l">Koszt BOM</div></div>
+    </div>
+    <h3 style="margin-top:34px;font-size:1em;color:var(--muted);letter-spacing:1px;text-transform:uppercase;font-family:JetBrains Mono">Dalszy rozwój</h3>
+    <div style="margin-top:8px">
+      <span class="chip">push-pull TX (+6 dB SNR)</span>
+      <span class="chip">kalibracja wielopunktowa (LUT)</span>
+      <span class="chip">pełne sub-mm z fazy</span>
+    </div>
+  </div>
+</section>
+
+<!-- 15. KONIEC -->
+<section>
+  <div class="cols l">
+    <div class="center stagger">
+      <div class="kicker">Koniec</div>
+      <h1>Dziękuję.<br><span class="cyan">Pytania?</span></h1>
+      <div class="hero-meta" style="margin-top:30px">
+        DEMO &nbsp;<b>klik → odczyt vs linijka</b><br>
+        KOD &nbsp;<b>AVR-GCC, rejestrowo, open source</b><br>
+        AUTOR &nbsp;<b>Kacper Popko · WETI 2026</b>
+      </div>
+    </div>
+    <div class="frame" style="height:78vh">
+      <span class="tl">URZĄDZENIE</span>
+      <img src="img/obudowa_gora.jpg" alt="Urządzenie">
+      <span class="cap">Bezkontaktowy miernik odległości</span>
+    </div>
+  </div>
+</section>
+
+</div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script>
+Reveal.initialize({
+  width: 1280, height: 760, margin: 0.04,
+  controls: true, progress: true, slideNumber: 'c/t', hash: true,
+  transition: 'fade', transitionSpeed: 'default', backgroundTransition: 'fade',
+});
+</script>
+</body>
+</html>
