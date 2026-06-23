@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<title>Notatki prelegenta — WETI 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#15202b; --soft:#43555f; --line:#d7e0e6;
+  --teal:#0a8f80; --teal-bg:#e7f6f3; --amber:#b06a00; --amber-bg:#fdf3e0;
+  --paper:#ffffff; --num:#0a6b60;
+}
+*{box-sizing:border-box}
+@page{ size:A4 portrait; margin:14mm 13mm; }
+html,body{margin:0;background:var(--paper);color:var(--ink);font-family:"IBM Plex Sans",sans-serif;font-size:10.6pt;line-height:1.42;}
+h1,h2,h3{font-family:"Chakra Petch",sans-serif;margin:0;}
+.mono{font-family:"JetBrains Mono",monospace;}
+
+/* naglowek dokumentu */
+.head{border-bottom:2.5px solid var(--teal);padding-bottom:10px;margin-bottom:16px;}
+.head h1{font-size:20pt;letter-spacing:-.4px;}
+.head .sub{color:var(--soft);font-size:9.5pt;margin-top:3px;font-family:"JetBrains Mono";letter-spacing:.5px;}
+.head .meta{float:right;text-align:right;font-family:"JetBrains Mono";font-size:8.5pt;color:var(--soft);line-height:1.6;}
+
+/* pitch / intro box */
+.intro{background:var(--teal-bg);border:1px solid #bfe4dd;border-radius:8px;padding:12px 15px;margin-bottom:16px;}
+.intro h3{color:var(--teal);font-size:10.5pt;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;}
+.intro p{margin:0;font-size:10.4pt;}
+.intro b{color:var(--ink);}
+
+/* karta slajdu */
+.card{border:1px solid var(--line);border-radius:9px;padding:12px 15px 13px;margin-bottom:11px;
+  break-inside:avoid;page-break-inside:avoid;}
+.card .top{display:flex;align-items:baseline;gap:10px;border-bottom:1px solid var(--line);padding-bottom:7px;margin-bottom:8px;}
+.badge{font-family:"JetBrains Mono";font-weight:700;font-size:9pt;color:#fff;background:var(--teal);
+  border-radius:5px;padding:3px 8px;white-space:nowrap;}
+.card h2{font-size:12.5pt;}
+.card .tag{margin-left:auto;font-family:"JetBrains Mono";font-size:7.8pt;letter-spacing:1px;color:var(--soft);text-transform:uppercase;}
+
+.lbl{font-family:"JetBrains Mono";font-size:7.6pt;letter-spacing:1.5px;text-transform:uppercase;color:var(--teal);font-weight:700;margin:7px 0 3px;}
+ul{margin:0 0 2px;padding-left:17px;}
+li{margin:2.5px 0;}
+li b{color:var(--ink);}
+.say li::marker{color:var(--teal);}
+.why{color:var(--soft);font-size:9.8pt;margin:2px 0 0;}
+
+/* chipsy z liczbami */
+.nums{margin-top:5px;}
+.chip{display:inline-block;font-family:"JetBrains Mono";font-weight:700;font-size:8.6pt;
+  background:var(--amber-bg);color:var(--amber);border:1px solid #ecd6ab;border-radius:14px;padding:2px 9px;margin:3px 5px 0 0;}
+
+/* sekcja Q&A */
+.qa{break-before:page;page-break-before:always;}
+.qa h2{font-size:15pt;color:var(--teal);border-bottom:2px solid var(--teal);padding-bottom:6px;margin-bottom:12px;}
+.q{break-inside:avoid;margin-bottom:11px;padding-left:14px;border-left:3px solid var(--line);}
+.q .ask{font-weight:600;color:var(--ink);}
+.q .ans{color:var(--soft);margin-top:2px;}
+.q .ans b{color:var(--teal);}
+
+.foot{margin-top:6px;font-family:"JetBrains Mono";font-size:8pt;color:var(--soft);text-align:center;}
+</style>
+</head>
+<body>
+
+<div class="head">
+  <div class="meta">WETI 2026 · PG<br>Kacper Popko<br>czas: ~8–10 min</div>
+  <h1>Notatki prelegenta</h1>
+  <div class="sub">Bezkontaktowy miernik odległości · ultradźwiękowy · ATtiny1616</div>
+</div>
+
+<div class="intro">
+  <h3>Pitch na otwarcie (~20 s) — naucz się na pamięć</h3>
+  <p>„Zbudowałem <b>bezkontaktowy miernik odległości</b>. Mierzy dystans do obiektu falą ultradźwiękową
+  <b>40 kHz</b> w zakresie <b>10–50 cm</b>, z dokładnością <b>~2,4 mm</b>, zużywając w spoczynku zaledwie
+  <b>0,9 mW</b>. Całość liczy jeden mikrokontroler <b>ATtiny1616</b>, programowany rejestrowo w czystym
+  AVR-GCC, bez Arduino. Metoda to <b>Pulse-Phase Ranging</b> — czas przelotu echa docinany fazą nośnej."</p>
+</div>
+
+<!-- 1 -->
+<div class="card">
+  <div class="top"><span class="badge">01</span><h2>Tytuł — kim jestem, co pokazuję</h2><span class="tag">~25 s</span></div>
+  <div class="lbl">Mówię</div>
+  <ul class="say">
+    <li>Dzień dobry, nazywam się Kacper Popko.</li>
+    <li>Projekt na konkurs <b>„Wygraj Indeks WETI 2026"</b>, opiekun Mateusz Karanowski.</li>
+    <li>Temat: <b>bezkontaktowy miernik odległości</b> — mierzy dystans do obiektu bez dotyku, ultradźwiękami.</li>
+    <li>Hook (jedno zdanie z pitchu): co robi + 3 mocne liczby (40 kHz, ~2,4 mm, 0,9 mW).</li>
+    <li>„Całość liczy <b>jeden</b> mikrokontroler, który sam programowałem rejestrowo, bez Arduino."</li>
+  </ul>
+  <div class="lbl">Przejście</div>
+  <ul class="say"><li>„Zacznijmy od tego, jakie warunki musiał spełnić ten przyrząd."</li></ul>
+  <div class="nums"><span class="chip">40 kHz</span><span class="chip">10–50 cm</span><span class="chip">~2,4 mm</span><span class="chip">0,9 mW</span><span class="chip">ATtiny1616</span></div>
+</div>
+
+<!-- 2 -->
+<div class="card">
+  <div class="top"><span class="badge">02</span><h2>Cel — co miało powstać</h2><span class="tag">~40 s</span></div>
+  <div class="lbl">Mówię</div>
+  <ul class="say">
+    <li>To były wymagania regulaminu — mój punkt wyjścia, nie moja fantazja.</li>
+    <li>Zasilanie <b>5 V</b> (typowe USB / zasilacz).</li>
+    <li>Zakres pomiaru <b>10–50 cm</b> — w tym zakresie ma być dokładny.</li>
+    <li>Obiekt testowy: <b>karton 20×20 cm</b> — to wzorcowy cel pomiaru.</li>
+    <li>Jury punktuje trzy parametry: <b>dokładność (RMSE)</b>, <b>pobór mocy</b> i <b>koszt</b>.</li>
+    <li>„Pod te trzy liczby świadomie optymalizowałem każdą decyzję projektową."</li>
+  </ul>
+  <div class="why">Wyjaśnienie: karton 20×20 to duża, płaska powierzchnia — odbija falę prosto z powrotem, daje czyste, mocne echo. Mały lub skośny obiekt rozprasza falę.</div>
+  <div class="lbl">Przejście</div>
+  <ul class="say"><li>„Pierwsza decyzja: jaką metodą w ogóle mierzyć odległość?"</li></ul>
+</div>
+
+<!-- 3 -->
+<div class="card">
+  <div class="top"><span class="badge">03</span><h2>Metoda — dlaczego Pulse-Phase</h2><span class="tag">~60 s</span></div>
+  <div class="lbl">Mówię (przejdź wiersz po wierszu w tabeli)</div>
+  <ul class="say">
+    <li>Porównałem cztery podejścia, zanim wybrałem.</li>
+    <li><b>Prosty ToF ultradźwiękowy</b> — tani i łatwy, ale ~3 mm; ogranicza go szerokość obwiedni echa (nie wiadomo dokładnie, gdzie się „zaczyna").</li>
+    <li><b>FMCW (chirp)</b> — teoretycznie najdokładniejszy, poniżej 0,5 mm, ale wymaga ciężkich obliczeń (FFT) — za dużo jak na malutki ATtiny.</li>
+    <li><b>Triangulacja optyczna</b> — dokładna, ale wrażliwa na światło zewnętrzne i kolor/połysk obiektu.</li>
+    <li>Mój wybór: <b>Pulse-Phase Ranging</b> = zgrubny czas przelotu <b>+</b> dokładna faza nośnej.</li>
+    <li>Dlaczego on: tani, mieści się w zasobach ATtiny, ma potencjał sub-mm i jest odporny na kolor oraz oświetlenie obiektu.</li>
+  </ul>
+  <div class="why">Wyjaśnienie: ultradźwiękom jest obojętne, czy obiekt jest czarny, biały czy błyszczący — odbijają się tak samo. To przewaga nad metodami optycznymi.</div>
+  <div class="lbl">Przejście</div>
+  <ul class="say"><li>„Żeby było jasne, na czym polega pomiar czasu — krótka fizyka."</li></ul>
+</div>
+
+<!-- 4 -->
+<div class="card">
+  <div class="top"><span class="badge">04</span><h2>Zasada fizyczna — D = c·t/2</h2><span class="tag">~55 s</span></div>
+  <div class="lbl">Mówię</div>
+  <ul class="say">
+    <li>Wysyłam krótką paczkę dźwięku <b>40 kHz</b>, ona leci do obiektu, odbija się i wraca.</li>
+    <li>Mierzę czas <b>t</b> od nadania do powrotu echa.</li>
+    <li>Odległość to <b>D = c·t/2</b>. Dzielę przez 2, bo fala pokonuje drogę <b>tam i z powrotem</b> — interesuje mnie połowa.</li>
+    <li>„c" to prędkość dźwięku — ale ona <b>nie jest stała</b>: zależy od temperatury.</li>
+    <li>Wzór: <b>c(T) = 331,3 + 0,606·T</b>. W 20 °C wychodzi ~343 m/s.</li>
+    <li>Dlatego na płytce mam termistor <b>NTC</b> — mierzę temperaturę i poprawiam prędkość.</li>
+    <li>Czas mierzę licznikiem <b>TCB0</b> z rozdzielczością <b>100 ns</b> na takt — bardzo precyzyjnie.</li>
+  </ul>
+  <div class="nums"><span class="chip">c ≈ 343 m/s @ 20°C</span><span class="chip">TCB0 = 100 ns/takt</span><span class="chip">~0,17 %/°C</span></div>
+  <div class="why">Liczba do obrony: błąd 1 °C w temperaturze to ~0,17 % błędu prędkości ≈ ~0,9 mm przy 50 cm. Bez kompensacji NTC nie dałoby się trzymać 2,4 mm.</div>
+  <div class="lbl">Przejście</div>
+  <ul class="say"><li>„Zobaczmy, jak ta zasada jest poukładana w sprzęcie."</li></ul>
+</div>
+
+<!-- 5 -->
+<div class="card">
+  <div class="top"><span class="badge">05</span><h2>Architektura — tor sygnałowy</h2><span class="tag">~50 s</span></div>
+  <div class="lbl">Mówię (prowadź palcem po diagramie, lewo → prawo)</div>
+  <ul class="say">
+    <li>Zasilanie: z <b>5 V</b> robię <b>3,3 V</b> stabilizatorem LDO <b>MCP1700</b> — to napięcie pracy całej elektroniki.</li>
+    <li>Nadajnik: ATtiny generuje sygnał <b>40 kHz</b> na pinie PB0, wzmacniany tranzystorem <b>BC817</b>, który „kopie" w przetwornik nadawczy.</li>
+    <li>Fala leci do kartonu, odbija się, wraca do <b>drugiego</b> przetwornika (odbiorczego).</li>
+    <li>Echo jest słabe (mikrowolty–miliwolty), więc wzmacniam je torem na <b>MCP6002</b>.</li>
+    <li>Mikrokontroler <b>ATtiny1616</b> próbkuje echo, liczy czas przelotu i fazę.</li>
+    <li>Wynik wysyła przez <b>USART</b> (port szeregowy) — można go odczytać na komputerze.</li>
+  </ul>
+  <div class="why">Pointa: „Cała inteligencja jest w mikrokontrolerze i w oprogramowaniu — reszta to wzmacniacze i zasilanie. To czyni układ tanim."</div>
+  <div class="lbl">Przejście</div>
+  <ul class="say"><li>„Teraz to samo, ale na schemacie ideowym."</li></ul>
+</div>
+
+<!-- 6 -->
+<div class="card">
+  <div class="top"><span class="badge">06</span><h2>Schemat ideowy</h2><span class="tag">~40 s</span></div>
+  <div class="lbl">Mówię</div>
+  <ul class="say">
+    <li>Schemat ma cztery sekcje: <b>zasilanie</b>, <b>nadajnik</b>, <b>tor odbiorczy</b> i <b>mikrokontroler</b>.</li>
+    <li>Zasilanie: wejście 5 V, kondensatory filtrujące, LDO 3,3 V.</li>
+    <li>Nadajnik: wyjście MCU → BC817 → przetwornik US.</li>
+    <li>Tor RX: przetwornik → wzmacniacz MCP6002 → wejście pomiarowe MCU.</li>
+    <li>Ważny detal: tor RX jest zasilany przez <b>P-MOSFET Q1 (BSS84)</b> — to „włącznik" całego wzmacniacza, sterowany z mikrokontrolera.</li>
+    <li>Wzmacniacz włącza się <b>tylko na czas pomiaru</b>, potem jest całkowicie odcięty.</li>
+  </ul>
+  <div class="why">Wyjaśnienie: to bramkowanie P-MOSFET-em jest jednym z dwóch kluczy do niskiego poboru mocy — w spoczynku analog nie ciągnie ani mikroampera.</div>
+  <div class="lbl">Przejście</div>
+  <ul class="say"><li>„Tak ten schemat wygląda zrealizowany na płytce."</li></ul>
+</div>
+
+<!-- 7 -->
+<div class="card">
+  <div class="top"><span class="badge">07</span><h2>PCB i prototyp</h2><span class="tag">~40 s</span></div>
+  <div class="lbl">Mówię</div>
+  <ul class="say">
+    <li>Płytka <b>dwuwarstwowa</b>, wymiary <b>41 × 54,25 mm</b> — kompaktowa.</li>
+    <li>Projekt narysowałem w programie <b>Eagle</b>, płytkę zmontowałem <b>ręcznie</b> (lutowanie SMD).</li>
+    <li>Warstwa górna to ścieżki sygnałowe, dolna to <b>jednolita masa (ground plane)</b>.</li>
+    <li>Na zdjęciach: gołe PCB (góra/dół) oraz gotowy, zmontowany egzemplarz.</li>
+    <li>To <b>działający prototyp</b>, na nim robiłem wszystkie pomiary, które za chwilę pokażę.</li>
+  </ul>
+  <div class="why">Wyjaśnienie: ciągła masa pod torem analogowym działa jak ekran — zmniejsza szum i zakłócenia. To istotne, bo echo z 50 cm jest bardzo słabe i każdy szum przeszkadza.</div>
+  <div class="lbl">Przejście</div>
+  <ul class="say"><li>„Przyjrzyjmy się sercu odbioru — wzmacniaczowi."</li></ul>
+</div>
+
+<!-- 8 -->
+<div class="card">
+  <div class="top"><span class="badge">08</span><h2>Tor analogowy RX — MCP6002</h2><span class="tag">~45 s</span></div>
+  <div class="lbl">Mówię</div>
+  <ul class="say">
+    <li>Odebrane echo jest bardzo słabe, więc wzmacniam je <b>dwustopniowo</b> na wzmacniaczu <b>MCP6002</b>.</li>
+    <li>Łączne wzmocnienie ok. <b>10×</b>, połączone z <b>filtrem pasmowym</b> nastrojonym na <b>40 kHz</b>.</li>
+    <li>Wykres Bode (symulacja LTspice): wzmocnienie ma <b>maksimum dokładnie na 40 kHz</b>.</li>
+    <li>Wszystko poza tym pasmem — szum, echa od innych przedmiotów, zakłócenia sieciowe — jest tłumione.</li>
+  </ul>
+  <div class="why">Wyjaśnienie: przetwornik jest <b>rezonansowy</b> na 40 kHz, więc projektuję filtr tak, żeby „wsłuchiwał się" tylko w tę jedną częstotliwość. Efekt: dużo lepszy stosunek sygnału do szumu, czyli pewniejsze echo.</div>
+  <div class="lbl">Przejście</div>
+  <ul class="say"><li>„Mamy czysty sygnał echa. Teraz — jak z niego wyciągam czas?"</li></ul>
+</div>
+
+<!-- 9 -->
+<div class="card">
+  <div class="top"><span class="badge">09</span><h2>Pomiar czasu — detekcja onset</h2><span class="tag">~65 s</span></div>
+  <div class="lbl">Mówię</div>
+  <ul class="say">
+    <li>Problem: gdzie dokładnie „jest" echo? Echo to nie pik, tylko narastająca paczka fal.</li>
+    <li>Naiwnie wziąłbym <b>maksimum</b> — ale to środek paczki i zależy od amplitudy (bliżej = mocniej, więc maksimum „pływa").</li>
+    <li>Dlatego wykrywam <b>onset</b> — <b>początek</b> echa: moment, gdy obwiednia przekracza <b>40 % swojego szczytu</b>.</li>
+    <li>Próg jest <b>znormalizowany</b> do szczytu danego pomiaru, więc nie zależy od tego, jak mocne jest echo.</li>
+    <li>Dokładam <b>interpolację sub-próbkową</b> — wyliczam moment przejścia progu <b>pomiędzy</b> próbkami ADC, czyli z dokładnością lepszą niż jedna próbka.</li>
+    <li>Każdy pomiar to <b>9 strzałów</b>: biorę <b>medianę</b> i odrzucam wartości odstające metodą <b>MAD</b> (mediana odchyleń).</li>
+    <li>ADC próbkuje szybko, ~<b>115 ksps</b>, żeby dobrze odwzorować kształt echa.</li>
+  </ul>
+  <div class="nums"><span class="chip">próg 40 % szczytu</span><span class="chip">9 strzałów → mediana</span><span class="chip">MAD</span><span class="chip">ADC ~115 ksps</span></div>
+  <div class="why">Liczba do obrony: sam ten zestaw (onset + interpolacja + mediana z odrzucaniem) ściął błąd losowy z ~4 mm do ~1,5 mm — bez zmiany sprzętu, samym algorytmem.</div>
+  <div class="lbl">Przejście</div>
+  <ul class="say"><li>„To daje dobry pomiar zgrubny. Żeby zejść niżej, dokładam fazę."</li></ul>
+</div>
+
+<!-- 10 -->
+<div class="card">
+  <div class="top"><span class="badge">10</span><h2>Pomiar fazy — filtr Goertzela</h2><span class="tag">~70 s</span></div>
+  <div class="lbl">Mówię</div>
+  <ul class="say">
+    <li>Drugi, dokładniejszy pomiar to <b>faza</b> fali nośnej 40 kHz.</li>
+    <li>Do jej wyliczenia używam <b>filtra Goertzela</b> — to sprytny, tani sposób policzenia <b>jednego prążka DFT</b>.</li>
+    <li>Nie robię całego FFT, bo <b>znam częstotliwość</b> (40 kHz) — liczę tylko ją. To kilka mnożeń na próbkę, idealne dla małego MCU.</li>
+    <li>Faza zmienia się aż o <b>83° na każdy milimetr</b> odległości — czyli jest <b>ekstremalnie czuła</b>, znacznie czulsza niż sam czas.</li>
+    <li>Sęk w tym, że faza jest <b>okresowa</b> — powtarza się co pół długości fali, czyli co <b>λ/2 ≈ 4,3 mm</b>.</li>
+    <li>To tak, jakby faza była dokładną „minutową wskazówką", a zgrubny ToF mówił, w którym jesteśmy „kwadransie" (który ząbek siatki 4,3 mm).</li>
+    <li>Fazę <b>uśredniam po wielu pingach</b>, a wskaźnik <b>PLV</b> (99–100) mówi mi, jak spójny i pewny jest ten pomiar.</li>
+  </ul>
+  <div class="why"><b>UCZCIWIE (powiedz to wprost — jury to ceni):</b> faza jest zaimplementowana i <b>stabilnie zablokowana</b> (PLV 99–100), ale na razie <b>nie poprawia dokładności bezwzględnej</b>. Powód: żeby trafić we właściwy ząbek siatki, zgrubny ToF musi mieć błąd <b>&lt; λ/4 ≈ 2,16 mm</b>, a ja jestem dokładnie na tej granicy. To świadoma, uczciwa diagnoza — i konkretny plan na przyszłość (mocniejszy nadajnik = więcej sygnału = lepszy ToF = faza zaczyna działać).</div>
+  <div class="lbl">Przejście</div>
+  <ul class="say"><li>„Druga oceniana liczba to pobór mocy — i tu jestem dumny z wyniku."</li></ul>
+</div>
+
+<!-- 11 -->
+<div class="card">
+  <div class="top"><span class="badge">11</span><h2>Energia — 0,9 mW w spoczynku</h2><span class="tag">~45 s</span></div>
+  <div class="lbl">Mówię</div>
+  <ul class="say">
+    <li>W spoczynku układ ciągnie <b>0,18 mA przy 5 V</b>, czyli <b>0,9 mW</b>.</li>
+    <li>To wartość <b>zmierzona miernikiem</b> na gotowym urządzeniu, nie wzięta z karty katalogowej.</li>
+    <li>Pierwszy klucz: mikrokontroler śpi w trybie <b>Standby</b> i budzi się tylko zegarem <b>RTC co 125 ms</b>, żeby sprawdzić przycisk.</li>
+    <li>Drugi klucz: cały tor analogowy jest <b>odcięty P-MOSFET-em</b> — 0 µA, gdy nie mierzymy.</li>
+    <li>Sam pomiar trwa krótko, ~<b>70 ms</b>, i bierze 2–4,5 mA — ale to malutki ułamek czasu.</li>
+    <li>Średnio urządzenie prawie cały czas „śpi", stąd tak niski wynik.</li>
+  </ul>
+  <div class="nums"><span class="chip">0,18 mA → 0,9 mW</span><span class="chip">Standby + RTC 125 ms</span><span class="chip">pomiar ~70 ms</span><span class="chip">→ max pkt za moc</span></div>
+  <div class="lbl">Przejście</div>
+  <ul class="say"><li>„No dobrze — a jak dokładny jest finalnie? Oto zmierzone dane."</li></ul>
+</div>
+
+<!-- 12 -->
+<div class="card">
+  <div class="top"><span class="badge">12</span><h2>Wyniki — RMSE ≈ 2,4 mm</h2><span class="tag">~55 s</span></div>
+  <div class="lbl">Mówię</div>
+  <ul class="say">
+    <li>Podkreślam: to są <b>realne, zmierzone dane</b>, nie symulacja.</li>
+    <li><b>7 punktów</b> odległości od 100 do 500 mm, łącznie <b>35 odczytów</b>.</li>
+    <li>Lewy wykres: odczyt vs odległość rzeczywista — punkty leżą <b>na idealnej prostej y = x</b>. Liniowość <b>R² &gt; 0,999</b>.</li>
+    <li>Prawy wykres: residua, czyli błędy poszczególnych punktów. <b>Wszystkie</b> mieszczą się w pasie <b>±2,4 mm</b>.</li>
+    <li>Największa pojedyncza odchyłka to tylko <b>+2,3 mm</b> (przy 150 mm).</li>
+    <li>Wniosek: <b>RMSE ≈ 2,4 mm</b> po prostej kalibracji liniowej, w <b>całym</b> zakresie 10–50 cm.</li>
+  </ul>
+  <div class="why">Konkretne punkty, gdyby ktoś dopytał: 100→100,0 (0,0); 200→198,0 (−2,0); 300→299,6 (−0,4); 500→499,6 (−0,4 mm). Czyli na krańcu zakresu, 50 cm, błąd to ułamek milimetra.</div>
+  <div class="lbl">Przejście</div>
+  <ul class="say"><li>„Po drodze było kilka twardych problemów — pokażę najciekawszy."</li></ul>
+</div>
+
+<!-- 13 -->
+<div class="card">
+  <div class="top"><span class="badge">13</span><h2>Wyzwania — czego się nauczyłem</h2><span class="tag">~55 s</span></div>
+  <div class="lbl">Mówię (to lubią słyszeć — pokazuje, że naprawdę rozumiesz sprzęt)</div>
+  <ul class="say">
+    <li>Najtrudniejszy bug: komparator analogowy <b>AC0 w ogóle nie łapał echa</b> — godziny szukania.</li>
+    <li>Okazało się — po dokładnym wczytaniu w dokumentację — że pin <b>PB4</b> dla AC0 jest tylko wejściem <b>ujemnym</b>, a wejście <b>dodatnie</b> (AINP3) ten sam pin ma dopiero w <b>AC1</b>.</li>
+    <li>Rozwiązanie: przełączyłem detekcję na <b>AC1 + DAC1</b> (próg z przetwornika DAC) — i od razu ruszyło sprzętowe łapanie echa.</li>
+    <li>Drugi problem: na <b>50 cm echo jest za słabe</b>. Rozwiązanie: <b>adaptacyjna długość paczki</b> — blisko nadaję N=10 impulsów, daleko N=24, żeby „dobić" sygnał.</li>
+    <li>Trzecia rzecz, świadoma: pokazuję <b>zmierzone 2,4 mm</b>, a nie teoretyczne 0,5 mm. Wolę uczciwą liczbę niż ładną.</li>
+  </ul>
+  <div class="why">Pointa do wypowiedzenia: „Największą lekcją było, że w tych mikrokontrolerach mapowanie pinów peryferiów trzeba czytać dosłownie linijka po linijce — jedna literka w dokumentacji kosztowała mnie pół dnia."</div>
+  <div class="lbl">Przejście</div>
+  <ul class="say"><li>„Podsumujmy, gdzie finalnie wylądowały wszystkie cztery liczby."</li></ul>
+</div>
+
+<!-- 14 -->
+<div class="card">
+  <div class="top"><span class="badge">14</span><h2>Podsumowanie — wszystko zmierzone</h2><span class="tag">~40 s</span></div>
+  <div class="lbl">Mówię</div>
+  <ul class="say">
+    <li>Wszystkie cztery wymagania spełnione <b>i potwierdzone pomiarem</b>, nie deklaracją.</li>
+    <li>Zakres: pełne <b>10–50 cm</b>.</li>
+    <li>Dokładność: <b>RMSE 2,4 mm</b>.</li>
+    <li>Pobór mocy: <b>0,9 mW</b> w spoczynku.</li>
+    <li>Koszt elementów: <b>43,73 zł</b>.</li>
+    <li>Plany rozwoju: nadajnik <b>push-pull</b> (+6 dB sygnału → odblokuje sub-mm z fazy) oraz kalibracja <b>wielopunktowa (LUT)</b> zamiast liniowej.</li>
+  </ul>
+  <div class="nums"><span class="chip">10–50 cm</span><span class="chip">2,4 mm</span><span class="chip">0,9 mW</span><span class="chip">43,73 zł</span></div>
+  <div class="lbl">Przejście</div>
+  <ul class="say"><li>„To tyle ode mnie — dziękuję i zapraszam do pytań."</li></ul>
+</div>
+
+<!-- 15 -->
+<div class="card">
+  <div class="top"><span class="badge">15</span><h2>Zakończenie + demo</h2><span class="tag">~25 s</span></div>
+  <div class="lbl">Mówię</div>
+  <ul class="say">
+    <li>Dziękuję za uwagę.</li>
+    <li>Jeśli jest czas i sprzęt: <b>demo na żywo</b> — klikam, pokazuję odczyt na ekranie i porównuję z linijką.</li>
+    <li>Cały projekt jest <b>open source</b> (licencja CC BY-NC-SA), kod rejestrowy w AVR-GCC dostępny na GitHubie.</li>
+    <li>„Chętnie odpowiem na Państwa pytania."</li>
+  </ul>
+  <div class="why">Jeśli demo nie wypali (sprzęt/hałas w sali): nie panikuj — powiedz „wyniki na slajdzie 12 są z tego samego egzemplarza" i przejdź do pytań. Nie tłumacz się długo.</div>
+</div>
+
+<!-- Q&A -->
+<div class="qa">
+  <h2>Pytania jury — przygotowane odpowiedzi</h2>
+
+  <div class="q"><div class="ask">Dlaczego nie gotowy moduł HC-SR04?</div>
+    <div class="ans">Bo chciałem <b>własny tor rejestrowy</b> z pełną kontrolą: dokładniejszy ToF + faza, dużo niższy pobór mocy (0,9 mW vs ~15 mW HC-SR04 w pracy ciągłej) i kompensacja temperatury. HC-SR04 daje ~1 cm, ja mam ~2,4 mm.</div></div>
+
+  <div class="q"><div class="ask">Skoro liczycie fazę, czemu dokładność to 2,4 mm, a nie sub-mm?</div>
+    <div class="ans">Faza docina wynik do siatki λ/2 ≈ 4,3 mm, ale trzeba trafić we właściwy „ząbek" — to wymaga, by <b>zgrubny ToF miał błąd &lt; λ/4 ≈ 2,16 mm</b>. Jestem na granicy, więc faza jest zablokowana (PLV 99–100), ale nie poprawia jeszcze wyniku bezwzględnego. Mocniejszy nadajnik push-pull da +6 dB i to odblokuje.</div></div>
+
+  <div class="q"><div class="ask">Jak kompensujecie temperaturę?</div>
+    <div class="ans">Termistor <b>NTC 10 kΩ</b>, model Beta, liczę c(T) = 331,3 + 0,606·T i tym koryguję przeliczenie czasu na odległość. Bez tego ~0,17 %/°C błędu.</div></div>
+
+  <div class="q"><div class="ask">Czemu dolny zakres to 10 cm, a nie mniej?</div>
+    <div class="ans"><b>Martwa strefa.</b> Zaraz po nadaniu przetwornik jeszcze „dzwoni" (ring-down) i własny sygnał zlewa się z echem. Poniżej ~10 cm echo wraca, zanim nadajnik ucichnie.</div></div>
+
+  <div class="q"><div class="ask">Dlaczego akurat ATtiny1616?</div>
+    <div class="ans">Ma wszystkie potrzebne peryferia sprzętowe: komparator analogowy (AC), DAC, system zdarzeń (EVSYS) i licznik z input-capture (TCB) — echo łapię <b>sprzętowo</b>, bez obciążania CPU. Do tego tani i energooszczędny.</div></div>
+
+  <div class="q"><div class="ask">Jak wygląda kalibracja?</div>
+    <div class="ans"><b>2-punktowa, polowa</b>, zapisywana w EEPROM (wejście: przytrzymanie przycisku przy starcie), zabezpieczona sumą CRC-8. Wyznacza współczynniki przeliczenia czasu na milimetry.</div></div>
+
+  <div class="q"><div class="ask">Dokładność a powtarzalność?</div>
+    <div class="ans">RMSE 2,4 mm to <b>dokładność</b> po kalibracji. Powtarzalność jest lepsza dzięki medianie z 9 strzałów i odrzucaniu odstających (MAD).</div></div>
+
+  <div class="q"><div class="ask">Co dominuje w koszcie 43,73 zł?</div>
+    <div class="ans">Para przetworników ultradźwiękowych i mikrokontroler. Reszta (MCP6002, LDO, tranzystory, bierne) to drobne kwoty.</div></div>
+
+  <div class="q"><div class="ask">Dlaczego AVR-GCC, a nie Arduino?</div>
+    <div class="ans">Programowanie <b>rejestrowe</b> daje precyzyjną kontrolę czasów (taktowanie 40 kHz, okna próbkowania), dostęp do peryferiów sprzętowych i mały, szybki kod — Arduino dodałoby narzut i utrudniło sterowanie AC/DAC/EVSYS/TCB.</div></div>
+
+  <div class="foot">Powodzenia. Mów wolno, pokazuj liczby, przy slajdzie 10 i 13 podkreśl uczciwość inżynierską — to robi najlepsze wrażenie.</div>
+</div>
+
+</body>
+</html>
